@@ -2,6 +2,11 @@ import torch
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+from PIL import Image
+import os 
+import ast
+import numpy as np 
+
 '''Emotic Dataset class - uses preprocessed data stored in the npy files'''
 class Emotic_PreDataset(Dataset):
   def __init__(self, x_context, x_body, y_cat, y_cont, transform, context_norm, body_norm):
@@ -24,3 +29,34 @@ class Emotic_PreDataset(Dataset):
     cont_label = self.y_cont[index]
     return self.context_norm(self.transform(image_context)), self.body_norm(self.transform(image_body)), torch.tensor(cat_label, dtype=torch.float32), torch.tensor(cont_label, dtype=torch.float32)/10.0
 
+'''Emotic Dataset class - uses data stored in the disk''' 
+class Emotic_CSVDataset(Dataset):
+  def __init__(self, data_df, cat2ind, transform, context_norm, body_norm, data_src = './'):
+    super(Emotic_CSVDataset,self).__init__()
+    self.data_df = data_df
+    self.data_src = data_src 
+    self.transform = transform 
+    self.cat2ind = cat2ind
+    self.context_norm = transforms.Normalize(context_norm[0], context_norm[1])  
+    self.body_norm = transforms.Normalize(body_norm[0], body_norm[1])
+
+  def __len__(self):
+    return len(self.data_df)
+  
+  def __getitem__(self, index):
+    row = self.data_df.loc[index]
+    image_context = Image.open(os.path.join(self.data_src, row['Folder'], row['Filename']))
+    bbox = ast.literal_eval(row['BBox'])
+    image_body = image_context.crop((bbox[0], bbox[1], bbox[2], bbox[3]))
+    image_context = image_context.resize((224, 224))
+    image_body = image_body.resize((128, 128))
+    cat_labels = ast.literal_eval(row['Categorical_Labels'])
+    cont_labels = ast.literal_eval(row['Continuous_Labels'])
+    one_hot_cat_labels = self.cat_to_one_hot(cat_labels)
+    return self.context_norm(self.transform(image_context)), self.body_norm(self.transform(image_body)), torch.tensor(one_hot_cat_labels, dtype=torch.float32), torch.tensor(cont_labels, dtype=torch.float32)/10.0
+  
+  def cat_to_one_hot(self, cat):
+    one_hot_cat = np.zeros(26)
+    for em in cat:
+      one_hot_cat[self.cat2ind[em]] = 1
+    return one_hot_cat
