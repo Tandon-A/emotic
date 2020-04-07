@@ -17,7 +17,7 @@ class Emotic_PreDataset(Dataset):
     self.y_cont = y_cont
     self.transform = transform 
     self.context_norm = transforms.Normalize(context_norm[0], context_norm[1])  # Normalizing the context image with context mean and context std
-    self.body_norm = transforms.Normalize(body_norm[0], body_norm[1])  # Normalizing the body image with body mean and body std
+    self.body_norm = transforms.Normalize(body_norm[0], body_norm[1])           # Normalizing the body image with body mean and body std
 
   def __len__(self):
     return len(self.y_cat)
@@ -38,8 +38,8 @@ class Emotic_CSVDataset(Dataset):
     self.data_src = data_src 
     self.transform = transform 
     self.cat2ind = cat2ind
-    self.context_norm = transforms.Normalize(context_norm[0], context_norm[1])  
-    self.body_norm = transforms.Normalize(body_norm[0], body_norm[1])
+    self.context_norm = transforms.Normalize(context_norm[0], context_norm[1])  # Normalizing the context image with context mean and context std
+    self.body_norm = transforms.Normalize(body_norm[0], body_norm[1])           # Normalizing the body image with body mean and body std
 
   def __len__(self):
     return len(self.data_df)
