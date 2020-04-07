@@ -29,6 +29,7 @@ class Emotic_PreDataset(Dataset):
     cont_label = self.y_cont[index]
     return self.context_norm(self.transform(image_context)), self.body_norm(self.transform(image_body)), torch.tensor(cat_label, dtype=torch.float32), torch.tensor(cont_label, dtype=torch.float32)/10.0
 
+  
 '''Emotic Dataset class - uses data stored in the disk''' 
 class Emotic_CSVDataset(Dataset):
   def __init__(self, data_df, cat2ind, transform, context_norm, body_norm, data_src = './'):
