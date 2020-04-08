@@ -4,8 +4,9 @@ import torchvision.models as models
 from torch.nn import functional as F
 import os
 
-
+''' Function to prepare context and body model.''' 
 def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./'):
+
   model_name = '%s_places365.pth.tar' % context_model
   model_file = os.path.join(model_dir, model_name)
   if not os.path.exists(model_file):
@@ -19,7 +20,6 @@ def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./')
   pickle.Unpickler = partial(pickle.Unpickler, encoding="latin1")
   model = torch.load(model_file, map_location=lambda storage, loc: storage, pickle_module=pickle)
   torch.save(model, save_file)
-  print('converting %s -> %s'%(model_file, save_file))
 
   # create the network architecture
   model = models.__dict__[context_model](num_classes=365)
@@ -33,6 +33,11 @@ def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./')
   
   print ('completed preparing context model')
 
+  model = models.__dict__[body_model](pretrained=True)
+  model.cpu()
+  torch.save(model, os.path.join(model_dir, 'body_model' + '.pth'))
+
+  print ('completed preparing body model')
 
 prep_models(model_dir='./')
 
