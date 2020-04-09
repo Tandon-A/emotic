@@ -21,8 +21,7 @@ def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./')
   torch.save(model, save_file)
 
   # create the network architecture
-  model = models.__dict__[context_model](num_classes=365)
-
+  model_context = models.__dict__[context_model](num_classes=365)
   checkpoint = torch.load(save_file, map_location=lambda storage, loc: storage) # model trained in GPU could be deployed in CPU machine like this!
   if context_model == 'densenet161':
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()}
@@ -34,18 +33,19 @@ def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./')
     state_dict = {str.replace(k,'convweight','conv.weight'): v for k,v in state_dict.items()}
   else:
     state_dict = {str.replace(k,'module.',''): v for k,v in checkpoint['state_dict'].items()} # the data parallel layer will add 'module' before each layer name
-  model.load_state_dict(state_dict)
-  model.eval()
-  model.cpu()
-  torch.save(model, os.path.join(model_dir, 'context_model' + '.pth'))
+  model_context.load_state_dict(state_dict)
+  model_context.eval()
+  model_context.cpu()
+  torch.save(model_context, os.path.join(model_dir, 'context_model' + '.pth'))
   
   print ('completed preparing context model')
-  
-  model = models.__dict__[body_model](pretrained=True)
-  model.cpu()
-  torch.save(model, os.path.join(model_dir, 'body_model' + '.pth'))
+
+  model_body = models.__dict__[body_model](pretrained=True)
+  model_body.cpu()
+  torch.save(model_body, os.path.join(model_dir, 'body_model' + '.pth'))
 
   print ('completed preparing body model')
+  return model_context, model_body
 
 if __name__ == '__main__':
   prep_models(model_dir='./')
