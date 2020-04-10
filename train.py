@@ -21,6 +21,7 @@ from prepare_models import prep_models
 
 def parse_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--data_dir', type=str, required=True, help='Path to preprocessed data npy files')
     parser.add_argument('--model_dir', type=str, required=True, help='Path to save models')
     parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
@@ -30,6 +31,7 @@ def parse_args():
     parser.add_argument('--cat_loss_weight', type=float, default=0.5)
     parser.add_argument('--cont_loss_weight', type=float, default=0.5)
     parser.add_argument('--epochs', type=int, default=5)
+    parser.add_argument('--batch_size', type=int, default=52) # use batch size = double(categorical emotion classes)
     # Generate args
     args = parser.parse_args()
     return args
@@ -200,9 +202,6 @@ if __name__ == '__main__':
         cat2ind[emotion] = idx
         ind2cat[idx] = emotion
 
-
-    batch_size = 52    # use batch size = double(categorical emotion classes)
-
     context_mean = [0.4690646, 0.4407227, 0.40508908]
     context_std = [0.2514227, 0.24312855, 0.24266963]
     body_mean = [0.43832874, 0.3964344, 0.3706214]
@@ -217,8 +216,8 @@ if __name__ == '__main__':
     train_dataset = Emotic_PreDataset(train_context, train_body, train_cat, train_cont, train_transform, context_norm, body_norm)
     val_dataset = Emotic_PreDataset(val_context, val_body, val_cat, val_cont, test_transform, context_norm, body_norm)
 
-    train_loader = DataLoader(train_dataset, batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size, shuffle=False)
+    train_loader = DataLoader(train_dataset, args.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, args.batch_size, shuffle=False)
 
     print ('train loader ', len(train_loader), 'val loader ', len(val_loader))
 
@@ -235,7 +234,7 @@ if __name__ == '__main__':
     for param in model_body.parameters():
         param.requires_grad = True
     
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:%s" %(str(args.gpu)) if torch.cuda.is_available() else "cpu")
     opt = optim.Adam((list(emotic_model.parameters()) + list(model_context.parameters()) + list(model_body.parameters())), lr=args.learning_rate, weight_decay=args.weight_decay)
     scheduler = StepLR(opt, step_size=7, gamma=0.1)
     disc_loss = DiscreteLoss('dynamic', device)
