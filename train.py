@@ -1,6 +1,7 @@
 import numpy as np 
 import os 
 import argparse
+from sklearn.metrics import average_precision_score
 
 import torch 
 import torch.nn as nn 
@@ -32,6 +33,40 @@ def parse_args():
     # Generate args
     args = parser.parse_args()
     return args
+
+def test_scikit_ap(cat_preds, cat_labels, ind2cat):
+  ap = np.zeros(26, dtype=np.float32)
+  for i in range(26):
+    ap[i] = average_precision_score(cat_labels[:, i], cat_preds[:, i])
+    print ('Category ', ind2cat[i], ap[i])
+  print ('Mean AP', ap.mean())
+
+
+def test_val(models, device, val_loader, ind2cat):
+    model_context, model_body, emotic_model = models
+    cat_preds = np.zeros((3315, 26))
+    cat_labels = np.zeros((3315, 26))
+    with torch.no_grad():
+        model_context.to(device)
+        model_body.to(device)
+        emotic_model.to(device)
+        model_context.eval()
+        model_body.eval()
+        emotic_model.eval()
+        indx = 0
+        for images_context, images_body, labels_cat, _ in iter(val_loader):
+            images_context = images_context.to(device)
+            images_body = images_body.to(device)
+
+            pred_context = model_context(images_context)
+            pred_body = model_body(images_body)
+            pred_cat, _ = emotic_model(pred_context, pred_body)
+
+            cat_preds[ indx : (indx + pred_cat.shape[0]), :] = pred_cat.to("cpu").data.numpy()
+            cat_labels[ indx : (indx + labels_cat.shape[0]), :] = labels_cat.to("cpu").data.numpy()
+            indx = indx + pred_cat.shape[0]
+
+    test_scikit_ap(cat_preds.transpose(), cat_labels.transpose(), ind2cat)
 
 
 def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_loss, cont_loss, args):
@@ -207,7 +242,7 @@ if __name__ == '__main__':
     cont_loss_SL1 = ContinuousLoss_SL1()
 
     train_emotic(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss_SL1, args)
-
+    test_val([model_context, model_body, emotic_model], device, val_loader, ind2cat)
 
 
 
