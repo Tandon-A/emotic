@@ -1,7 +1,6 @@
 import numpy as np 
 import os 
 import argparse
-from sklearn.metrics import average_precision_score
 
 import torch 
 import torch.nn as nn 
@@ -17,6 +16,7 @@ from emotic import Emotic
 from emotic_dataset import Emotic_PreDataset
 from loss_classes import DiscreteLoss, ContinuousLoss_SL1
 from prepare_models import prep_models
+from test import test_data
 
 
 def parse_args():
@@ -24,6 +24,7 @@ def parse_args():
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--data_dir', type=str, required=True, help='Path to preprocessed data npy files')
     parser.add_argument('--model_dir', type=str, required=True, help='Path to save models')
+    parser.add_argument('--result_dir', type=str, default='./', help='Path to save results (prediction, labels mat file)')    
     parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
     parser.add_argument('--body_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
     parser.add_argument('--learning_rate', type=float, default=0.01)
@@ -35,40 +36,6 @@ def parse_args():
     # Generate args
     args = parser.parse_args()
     return args
-
-def test_scikit_ap(cat_preds, cat_labels, ind2cat):
-  ap = np.zeros(26, dtype=np.float32)
-  for i in range(26):
-    ap[i] = average_precision_score(cat_labels[:, i], cat_preds[:, i])
-    print ('Category ', ind2cat[i], ap[i])
-  print ('Mean AP', ap.mean())
-
-
-def test_val(models, device, val_loader, ind2cat):
-    model_context, model_body, emotic_model = models
-    cat_preds = np.zeros((3315, 26))
-    cat_labels = np.zeros((3315, 26))
-    with torch.no_grad():
-        model_context.to(device)
-        model_body.to(device)
-        emotic_model.to(device)
-        model_context.eval()
-        model_body.eval()
-        emotic_model.eval()
-        indx = 0
-        for images_context, images_body, labels_cat, _ in iter(val_loader):
-            images_context = images_context.to(device)
-            images_body = images_body.to(device)
-
-            pred_context = model_context(images_context)
-            pred_body = model_body(images_body)
-            pred_cat, _ = emotic_model(pred_context, pred_body)
-
-            cat_preds[ indx : (indx + pred_cat.shape[0]), :] = pred_cat.to("cpu").data.numpy()
-            cat_labels[ indx : (indx + labels_cat.shape[0]), :] = labels_cat.to("cpu").data.numpy()
-            indx = indx + pred_cat.shape[0]
-
-    test_scikit_ap(cat_preds.transpose(), cat_labels.transpose(), ind2cat)
 
 
 def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_loss, cont_loss, args):
@@ -173,6 +140,7 @@ def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_l
     torch.save(emotic_model, os.path.join(args.model_dir, 'model_emotic1.pth'))
     torch.save(model_context, os.path.join(args.model_dir, 'model_context1.pth'))
     torch.save(model_body, os.path.join(args.model_dir, 'model_body.pth1'))
+    print ('saved models')
 
 
 if __name__ == '__main__':
@@ -241,7 +209,6 @@ if __name__ == '__main__':
     cont_loss_SL1 = ContinuousLoss_SL1()
 
     train_emotic(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss_SL1, args)
-    test_val([model_context, model_body, emotic_model], device, val_loader, ind2cat)
-
+    test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, val_dataset.__len__(), save_results=False)
 
 
