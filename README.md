@@ -15,7 +15,6 @@ The project uses the [EMOTIC dataset](https://drive.google.com/file/d/0B7sjGeF4f
 
 Two feature extraction modules first extract features over an image. These features are then used by a third module to predict the continuous dimensions (valence, arousal and dominance) and the discrete emotion categories. 
 
-![Pipeline](https://raw.githubusercontent.com/Tandon-A/emotic/master/assets/pipeline%20model.jpg "Emotic Pipeline")
 
 
 
