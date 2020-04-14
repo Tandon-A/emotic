@@ -9,8 +9,9 @@ def test_scikit_ap(cat_preds, cat_labels, ind2cat):
   ap = np.zeros(26, dtype=np.float32)
   for i in range(26):
     ap[i] = average_precision_score(cat_labels[:, i], cat_preds[:, i])
-    print ('Category %16s %f' %(ind2cat[i], ap[i]))
-  print ('Mean AP', ap.mean())
+    print ('Category %16s %.5f' %(ind2cat[i], ap[i]))
+  print ('Mean AP %.5f' %(ap.mean()))
+
 
 
 def test_data(models, device, data_loader, ind2cat, num_images, save_results=False, result_dir='./'):
@@ -45,8 +46,6 @@ def test_data(models, device, data_loader, ind2cat, num_images, save_results=Fal
     
     ''' Mat files used for emotic testing (matlab script)'''
     if save_results == True:
-        if not os.path.exists(result_dir):
-            os.makedirs(result_dir)
         scipy.io.savemat(os.path.join(result_dir, 'cat_preds.mat'), mdict={'cat_preds':cat_preds})
         scipy.io.savemat(os.path.join(result_dir, 'cat_labels.mat'), mdict={'cat_labels':cat_labels})
         print ('saved mat files')
