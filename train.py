@@ -11,6 +11,7 @@ import torchvision.models as models
 from torch.autograd import Variable
 from torchvision import transforms
 from torch.optim.lr_scheduler import StepLR
+from tensorboardX import SummaryWriter
 
 from emotic import Emotic 
 from emotic_dataset import Emotic_PreDataset
@@ -22,9 +23,11 @@ from test import test_data
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=int, default=0)
-    parser.add_argument('--data_dir', type=str, required=True, help='Path to preprocessed data npy files')
-    parser.add_argument('--model_dir', type=str, required=True, help='Path to save models')
-    parser.add_argument('--result_dir', type=str, default='./', help='Path to save results (prediction, labels mat file)')    
+    parser.add_argument('--data_path', type=str, required=True, help='Path to preprocessed data npy files')
+    parser.add_argument('--experiment_path', type=str, required=True, help='Path to save experiment files (results, models, logs)')
+    parser.add_argument('--model_dir', type=str, default='models', help='Path to save models')
+    parser.add_argument('--result_dir', type=str, default='results', help='Path to save results (prediction, labels mat file)')
+    parser.add_argument('--log_dir', type=str, default='logs', help='Path to save logs (train, val)')
     parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
     parser.add_argument('--body_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
     parser.add_argument('--learning_rate', type=float, default=0.01)
@@ -38,14 +41,7 @@ def parse_args():
     return args
 
 
-def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_loss, cont_loss, args):
-    train_loss = list()
-    val_loss = list()
-    train_cat = list()
-    train_cont = list()
-    val_cat = list()
-    val_cont = list()
-
+def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args):
     model_context, model_body, emotic_model = models
 
     emotic_model.to(device)
@@ -90,11 +86,11 @@ def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_l
             opt.step()
 
         if e % 1 == 0: 
-            print ('epoch = %r loss = %r cat loss = %r cont_loss = %r' %(e, running_loss, running_cat_loss, running_cont_loss))
+            print ('epoch = %d loss = %.4f cat loss = %.4f cont_loss = %.4f' %(e, running_loss, running_cat_loss, running_cont_loss))
 
-        train_loss.append(running_loss)
-        train_cat.append(running_cat_loss)
-        train_cont.append(running_cont_loss)
+        train_writer.add_scalar('losses/total_loss', running_loss, e)
+        train_writer.add_scalar('losses/categorical_loss', running_cat_loss, e)
+        train_writer.add_scalar('losses/continuous_loss', running_cont_loss, e)
         
         running_loss = 0.0 
         running_cat_loss = 0.0 
@@ -125,11 +121,11 @@ def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_l
                 running_cont_loss += cont_loss_batch.item()
 
         if e % 1 == 0:
-            print ('epoch = %r validation loss = %r cat loss = %r cont loss = %r ' %(e, running_loss, running_cat_loss, running_cont_loss))
+            print ('epoch = %d validation loss = %.4f cat loss = %.4f cont loss = %.4f ' %(e, running_loss, running_cat_loss, running_cont_loss))
         
-        val_loss.append(running_loss)
-        val_cat.append(running_cat_loss)
-        val_cont.append(running_cont_loss)
+        val_writer.add_scalar('losses/total_loss', running_loss, e)
+        val_writer.add_scalar('losses/categorical_loss', running_cat_loss, e)
+        val_writer.add_scalar('losses/continuous_loss', running_cont_loss, e)
         
         scheduler.step()
     
@@ -137,25 +133,43 @@ def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_l
     emotic_model.to("cpu")
     model_context.to("cpu")
     model_body.to("cpu")
-    torch.save(emotic_model, os.path.join(args.model_dir, 'model_emotic1.pth'))
-    torch.save(model_context, os.path.join(args.model_dir, 'model_context1.pth'))
-    torch.save(model_body, os.path.join(args.model_dir, 'model_body.pth1'))
+    torch.save(emotic_model, os.path.join(model_path, 'model_emotic1.pth'))
+    torch.save(model_context, os.path.join(model_path, 'model_context1.pth'))
+    torch.save(model_body, os.path.join(model_path, 'model_body.pth1'))
     print ('saved models')
 
+    
+def check_paths(args):
+    folders= [args.result_dir, args.model_dir]
+    paths = list()
+    for folder in folders:
+        folder_path = os.path.join(args.experiment_path, folder)
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        paths.append(folder_path)
+    log_folders = ['train', 'val']
+    for folder in log_folders:
+        folder_path = os.path.join(args.experiment_path, args.log_dir, folder)
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+        paths.append(folder_path)
+    return paths
 
 if __name__ == '__main__':
     args = parse_args()
+    result_path, model_path, train_log_path, val_log_path = check_paths(args)
     
-    # Load preprocessed data from npy files 
-    train_context = np.load(os.path.join(args.data_dir, 'train_context_arr.npy'))
-    train_body = np.load(os.path.join(args.data_dir, 'train_body_arr.npy'))
-    train_cat = np.load(os.path.join(args.data_dir, 'train_cat_arr.npy'))
-    train_cont = np.load(os.path.join(args.data_dir, 'train_cont_arr.npy'))
+    # Load preprocessed data from npy files     
+    train_context = np.load(os.path.join(args.data_path, 'val_context_arr.npy'))
+    train_body = np.load(os.path.join(args.data_path, 'val_body_arr.npy'))
+    train_cat = np.load(os.path.join(args.data_path, 'val_cat_arr.npy'))
+    train_cont = np.load(os.path.join(args.data_path, 'val_cont_arr.npy'))
 
-    val_context = np.load(os.path.join(args.data_dir, 'val_context_arr.npy'))
-    val_body = np.load(os.path.join(args.data_dir, 'val_body_arr.npy'))
-    val_cat = np.load(os.path.join(args.data_dir, 'val_cat_arr.npy'))
-    val_cont = np.load(os.path.join(args.data_dir, 'val_cont_arr.npy'))
+    val_context = np.load(os.path.join(args.data_path, 'val_context_arr.npy'))
+    val_body = np.load(os.path.join(args.data_path, 'val_body_arr.npy'))
+    val_cat = np.load(os.path.join(args.data_path, 'val_cat_arr.npy'))
+    val_cont = np.load(os.path.join(args.data_path, 'val_cont_arr.npy'))
+
 
     print ('train ', 'context ', train_context.shape, 'body', train_body.shape, 'cat ', train_cat.shape, 'cont', train_cont.shape)
     print ('val ', 'context ', val_context.shape, 'body', val_body.shape, 'cat ', val_cat.shape, 'cont', val_cont.shape)
@@ -190,7 +204,7 @@ if __name__ == '__main__':
     print ('train loader ', len(train_loader), 'val loader ', len(val_loader))
 
     # Prepare models 
-    model_context, model_body = prep_models(context_model=args.context_model, body_model=args.body_model, model_dir=args.model_dir)
+    model_context, model_body = prep_models(context_model=args.context_model, body_model=args.body_model, model_dir=model_path)
     emotic_model = Emotic(list(model_context.children())[-1].in_features, list(model_body.children())[-1].in_features)
     model_context = nn.Sequential(*(list(model_context.children())[:-1]))
     model_body = nn.Sequential(*(list(model_body.children())[:-1]))
@@ -208,7 +222,10 @@ if __name__ == '__main__':
     disc_loss = DiscreteLoss('dynamic', device)
     cont_loss_SL1 = ContinuousLoss_SL1()
 
-    train_emotic(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss_SL1, args)
-    test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, val_dataset.__len__(), save_results=False)
+    train_writer = SummaryWriter(train_log_path)
+    val_writer = SummaryWriter(val_log_path)
+
+    train_emotic(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss_SL1, train_writer, val_writer, model_path, args)
+    test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, val_dataset.__len__(), save_results=False, result_dir=result_path)
 
 
