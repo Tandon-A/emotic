@@ -15,7 +15,7 @@ from tensorboardX import SummaryWriter
 
 from emotic import Emotic 
 from emotic_dataset import Emotic_PreDataset
-from loss_classes import DiscreteLoss, ContinuousLoss_SL1
+from loss_classes import DiscreteLoss, ContinuousLoss_SL1, ContinuousLoss_L2
 from prepare_models import prep_models
 from test import test_data
 
@@ -34,6 +34,7 @@ def parse_args():
     parser.add_argument('--weight_decay', type=float, default=5e-4)
     parser.add_argument('--cat_loss_weight', type=float, default=0.5)
     parser.add_argument('--cont_loss_weight', type=float, default=0.5)
+    parser.add_argument('--continuous_loss_type', type=str, default='Smooth L1', choices=['L2', 'Smooth L1'])
     parser.add_argument('--epochs', type=int, default=5)
     parser.add_argument('--batch_size', type=int, default=52) # use batch size = double(categorical emotion classes)
     # Generate args
@@ -220,12 +221,15 @@ if __name__ == '__main__':
     opt = optim.Adam((list(emotic_model.parameters()) + list(model_context.parameters()) + list(model_body.parameters())), lr=args.learning_rate, weight_decay=args.weight_decay)
     scheduler = StepLR(opt, step_size=7, gamma=0.1)
     disc_loss = DiscreteLoss('dynamic', device)
-    cont_loss_SL1 = ContinuousLoss_SL1()
+    if args.continuous_loss_type == 'Smooth L1':
+        cont_loss = ContinuousLoss_SL1()
+    else:
+        cont_loss = ContinuousLoss_L2()
 
     train_writer = SummaryWriter(train_log_path)
     val_writer = SummaryWriter(val_log_path)
 
-    train_emotic(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss_SL1, train_writer, val_writer, model_path, args)
+    train_emotic(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args)
     test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, val_dataset.__len__(), save_results=False, result_dir=result_path)
 
 
