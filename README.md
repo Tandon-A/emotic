@@ -13,6 +13,9 @@ A scene context, as shown in the figure above, can provide additional informatio
 
 The project uses the [EMOTIC dataset](https://drive.google.com/file/d/0B7sjGeF4f3FYQUVlZ3ZOai1ieEU/view) and follows the methodology as introduced in the paper *'Context based emotion recognition using EMOTIC dataset'*. ([paper](https://ieeexplore.ieee.org/document/8713881))
 
+![Pipeline](https://raw.githubusercontent.com/Tandon-A/emotic/master/assets/pipeline%20model.jpg "Model Pipeline") 
+###### Fig 2: Model Pipeline ([Image source](https://ieeexplore.ieee.org/document/8713881))
+
 Two feature extraction modules first extract features over an image. These features are then used by a third module to predict the continuous dimensions (valence, arousal and dominance) and the discrete emotion categories. 
 
 
