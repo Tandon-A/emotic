@@ -7,7 +7,7 @@ from test import test_emotic
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=int, default=0)
-    parser.add_argument('--mode', type=str, default='train', choices=['train', 'test', 'train_test', 'inference'])
+    parser.add_argument('--mode', type=str, default='train_test', choices=['train', 'test', 'train_test', 'inference'])
     parser.add_argument('--data_path', type=str, required=True, help='Path to preprocessed data npy files')
     parser.add_argument('--experiment_path', type=str, required=True, help='Path to save experiment files (results, models, logs)')
     parser.add_argument('--model_dir', type=str, default='models', help='Path to save models')
