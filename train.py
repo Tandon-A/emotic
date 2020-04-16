@@ -122,10 +122,10 @@ def train_data(opt, scheduler, models, device, train_loader, val_loader, disc_lo
 def train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, context_norm, body_norm, args):
 
     # Load preprocessed data from npy files     
-    train_context = np.load(os.path.join(args.data_path, 'val_context_arr.npy'))
-    train_body = np.load(os.path.join(args.data_path, 'val_body_arr.npy'))
-    train_cat = np.load(os.path.join(args.data_path, 'val_cat_arr.npy'))
-    train_cont = np.load(os.path.join(args.data_path, 'val_cont_arr.npy'))
+    train_context = np.load(os.path.join(args.data_path, 'train_context_arr.npy'))
+    train_body = np.load(os.path.join(args.data_path, 'train_body_arr.npy'))
+    train_cat = np.load(os.path.join(args.data_path, 'train_cat_arr.npy'))
+    train_cont = np.load(os.path.join(args.data_path, 'train_cont_arr.npy'))
 
     val_context = np.load(os.path.join(args.data_path, 'val_context_arr.npy'))
     val_body = np.load(os.path.join(args.data_path, 'val_body_arr.npy'))
