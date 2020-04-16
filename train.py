@@ -1,6 +1,5 @@
 import numpy as np 
 import os 
-import argparse
 
 import torch 
 import torch.nn as nn 
@@ -19,30 +18,9 @@ from loss_classes import DiscreteLoss, ContinuousLoss_SL1, ContinuousLoss_L2
 from prepare_models import prep_models
 from test import test_data
 
+''' Train models on data '''
+def train_data(opt, scheduler, models, device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args):
 
-def parse_args():
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', type=int, default=0)
-    parser.add_argument('--data_path', type=str, required=True, help='Path to preprocessed data npy files')
-    parser.add_argument('--experiment_path', type=str, required=True, help='Path to save experiment files (results, models, logs)')
-    parser.add_argument('--model_dir', type=str, default='models', help='Path to save models')
-    parser.add_argument('--result_dir', type=str, default='results', help='Path to save results (prediction, labels mat file)')
-    parser.add_argument('--log_dir', type=str, default='logs', help='Path to save logs (train, val)')
-    parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
-    parser.add_argument('--body_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
-    parser.add_argument('--learning_rate', type=float, default=0.01)
-    parser.add_argument('--weight_decay', type=float, default=5e-4)
-    parser.add_argument('--cat_loss_weight', type=float, default=0.5)
-    parser.add_argument('--cont_loss_weight', type=float, default=0.5)
-    parser.add_argument('--continuous_loss_type', type=str, default='Smooth L1', choices=['L2', 'Smooth L1'])
-    parser.add_argument('--epochs', type=int, default=5)
-    parser.add_argument('--batch_size', type=int, default=52) # use batch size = double(categorical emotion classes)
-    # Generate args
-    args = parser.parse_args()
-    return args
-
-
-def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args):
     model_context, model_body, emotic_model = models
 
     emotic_model.to(device)
@@ -136,30 +114,13 @@ def train_emotic(opt, scheduler, models, device, train_loder, val_loader, disc_l
     model_body.to("cpu")
     torch.save(emotic_model, os.path.join(model_path, 'model_emotic1.pth'))
     torch.save(model_context, os.path.join(model_path, 'model_context1.pth'))
-    torch.save(model_body, os.path.join(model_path, 'model_body.pth1'))
+    torch.save(model_body, os.path.join(model_path, 'model_body1.pth'))
     print ('saved models')
 
-    
-def check_paths(args):
-    folders= [args.result_dir, args.model_dir]
-    paths = list()
-    for folder in folders:
-        folder_path = os.path.join(args.experiment_path, folder)
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-        paths.append(folder_path)
-    log_folders = ['train', 'val']
-    for folder in log_folders:
-        folder_path = os.path.join(args.experiment_path, args.log_dir, folder)
-        if not os.path.exists(folder_path):
-            os.makedirs(folder_path)
-        paths.append(folder_path)
-    return paths
 
-if __name__ == '__main__':
-    args = parse_args()
-    result_path, model_path, train_log_path, val_log_path = check_paths(args)
-    
+ ''' Prepare dataset, dataloders, models '''
+def train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, context_norm, body_norm, args):
+
     # Load preprocessed data from npy files     
     train_context = np.load(os.path.join(args.data_path, 'val_context_arr.npy'))
     train_body = np.load(os.path.join(args.data_path, 'val_body_arr.npy'))
@@ -171,26 +132,8 @@ if __name__ == '__main__':
     val_cat = np.load(os.path.join(args.data_path, 'val_cat_arr.npy'))
     val_cont = np.load(os.path.join(args.data_path, 'val_cont_arr.npy'))
 
-
     print ('train ', 'context ', train_context.shape, 'body', train_body.shape, 'cat ', train_cat.shape, 'cont', train_cont.shape)
     print ('val ', 'context ', val_context.shape, 'body', val_body.shape, 'cat ', val_cat.shape, 'cont', val_cont.shape)
-
-    cat = ['Affection', 'Anger', 'Annoyance', 'Anticipation', 'Aversion', 'Confidence', 'Disapproval', 'Disconnection',
-       'Disquietment', 'Doubt/Confusion', 'Embarrassment', 'Engagement', 'Esteem', 'Excitement', 'Fatigue', 'Fear',
-       'Happiness', 'Pain', 'Peace', 'Pleasure', 'Sadness', 'Sensitivity', 'Suffering', 'Surprise', 'Sympathy', 'Yearning']
-
-    cat2ind = {}
-    ind2cat = {}
-    for idx, emotion in enumerate(cat):
-        cat2ind[emotion] = idx
-        ind2cat[idx] = emotion
-
-    context_mean = [0.4690646, 0.4407227, 0.40508908]
-    context_std = [0.2514227, 0.24312855, 0.24266963]
-    body_mean = [0.43832874, 0.3964344, 0.3706214]
-    body_std = [0.24784276, 0.23621225, 0.2323653]
-    context_norm = [context_mean, context_std]
-    body_norm = [body_mean, body_std]
 
     # Initialize Dataset and DataLoader 
     train_transform = transforms.Compose([transforms.ToPILImage(),transforms.RandomHorizontalFlip(), transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4), transforms.ToTensor()])
@@ -220,7 +163,7 @@ if __name__ == '__main__':
     device = torch.device("cuda:%s" %(str(args.gpu)) if torch.cuda.is_available() else "cpu")
     opt = optim.Adam((list(emotic_model.parameters()) + list(model_context.parameters()) + list(model_body.parameters())), lr=args.learning_rate, weight_decay=args.weight_decay)
     scheduler = StepLR(opt, step_size=7, gamma=0.1)
-    disc_loss = DiscreteLoss('dynamic', device)
+    disc_loss = DiscreteLoss(args.discrete_loss_weight_type, device)
     if args.continuous_loss_type == 'Smooth L1':
         cont_loss = ContinuousLoss_SL1()
     else:
@@ -229,7 +172,5 @@ if __name__ == '__main__':
     train_writer = SummaryWriter(train_log_path)
     val_writer = SummaryWriter(val_log_path)
 
-    train_emotic(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args)
+    train_data(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args)
     test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, val_dataset.__len__(), save_results=False, result_dir=result_path)
-
-
