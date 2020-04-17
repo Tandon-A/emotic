@@ -15,7 +15,7 @@ from emotic_dataset import Emotic_PreDataset
 def test_scikit_ap(cat_preds, cat_labels, ind2cat):
   ap = np.zeros(26, dtype=np.float32)
   for i in range(26):
-    ap[i] = average_precision_score(cat_labels[:, i], cat_preds[:, i])
+    ap[i] = average_precision_score(cat_labels[i, :], cat_preds[i, :])
     print ('Category %16s %.5f' %(ind2cat[i], ap[i]))
   print ('Mean AP %.5f' %(ap.mean()))
 
