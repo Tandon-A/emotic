@@ -21,7 +21,7 @@ def parse_args():
     parser.add_argument('--cont_loss_weight', type=float, default=0.5)
     parser.add_argument('--continuous_loss_type', type=str, default='Smooth L1', choices=['L2', 'Smooth L1'])
     parser.add_argument('--discrete_loss_weight_type', type=str, default='dynamic', choices=['dynamic', 'mean', 'static'])
-    parser.add_argument('--epochs', type=int, default=5)
+    parser.add_argument('--epochs', type=int, default=15)
     parser.add_argument('--batch_size', type=int, default=52) # use batch size = double(categorical emotion classes)
     # Generate args
     args = parser.parse_args()
@@ -48,6 +48,7 @@ def check_paths(args):
 
 if __name__ == '__main__':
     args = parse_args()
+    print ('mode ', args.mode)
 
     result_path, model_path, train_log_path, val_log_path = check_paths(args)
 
