@@ -118,7 +118,7 @@ def train_data(opt, scheduler, models, device, train_loader, val_loader, disc_lo
     print ('saved models')
 
 
- ''' Prepare dataset, dataloders, models '''
+''' Prepare dataset, dataloders, models '''
 def train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, context_norm, body_norm, args):
 
     # Load preprocessed data from npy files     
@@ -173,4 +173,4 @@ def train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat,
     val_writer = SummaryWriter(val_log_path)
 
     train_data(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args)
-    test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, val_dataset.__len__(), save_results=False, result_dir=result_path)
+    test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, val_dataset.__len__(), result_dir=result_path, test_type='val')
