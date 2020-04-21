@@ -3,16 +3,18 @@ import argparse
 
 from train import train_emotic
 from test import test_emotic
+from inference import inference_emotic
 
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--gpu', type=int, default=0)
     parser.add_argument('--mode', type=str, default='train_test', choices=['train', 'test', 'train_test', 'inference'])
-    parser.add_argument('--data_path', type=str, required=True, help='Path to preprocessed data npy files')
+    parser.add_argument('--data_path', type=str, help='Path to preprocessed data npy files')
     parser.add_argument('--experiment_path', type=str, required=True, help='Path to save experiment files (results, models, logs)')
     parser.add_argument('--model_dir', type=str, default='models', help='Path to save models')
     parser.add_argument('--result_dir', type=str, default='results', help='Path to save results (prediction, labels mat file)')
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to save logs (train, val)')
+    parser.add_argument('--inference_file', type=str, help='Text file containing image context paths and bounding box')
     parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
     parser.add_argument('--body_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
     parser.add_argument('--learning_rate', type=float, default=0.01)
@@ -55,12 +57,16 @@ if __name__ == '__main__':
     cat = ['Affection', 'Anger', 'Annoyance', 'Anticipation', 'Aversion', 'Confidence', 'Disapproval', 'Disconnection', \
             'Disquietment', 'Doubt/Confusion', 'Embarrassment', 'Engagement', 'Esteem', 'Excitement', 'Fatigue', 'Fear','Happiness', \
             'Pain', 'Peace', 'Pleasure', 'Sadness', 'Sensitivity', 'Suffering', 'Surprise', 'Sympathy', 'Yearning']
-
     cat2ind = {}
     ind2cat = {}
     for idx, emotion in enumerate(cat):
         cat2ind[emotion] = idx
         ind2cat[idx] = emotion
+
+    vad = ['Valence', 'Arousal', 'Dominance']
+    ind2vad = {}
+    for idx, continuous in enumerate(vad):
+        ind2vad[idx] = continuous
 
     context_mean = [0.4690646, 0.4407227, 0.40508908]
     context_std = [0.2514227, 0.24312855, 0.24266963]
@@ -70,14 +76,21 @@ if __name__ == '__main__':
     body_norm = [body_mean, body_std]
 
     if args.mode == 'train':
-        train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, context_norm, body_norm, args)
+        if args.data_path is None:
+            raise ValueError('Data path not provided. Please pass a valid data path for training')
+        train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, ind2vad, context_norm, body_norm, args)
     elif args.mode == 'test':
-        test_emotic(result_path, model_path, ind2cat, context_norm, body_norm, args)
+        if args.data_path is None:
+            raise ValueError('Data path not provided. Please pass a valid data path for testing')
+        test_emotic(result_path, model_path, ind2cat, ind2vad, context_norm, body_norm, args)
     elif args.mode == 'train_test':
-        train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, context_norm, body_norm, args)
-        test_emotic(result_path, model_path, ind2cat, context_norm, body_norm, args)
+        if args.data_path is None:
+            raise ValueError('Data path not provided. Please pass a valid data path for training and testing')
+        train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, ind2vad, context_norm, body_norm, args)
+        test_emotic(result_path, model_path, ind2cat, ind2vad, context_norm, body_norm, args)
     elif args.mode == 'inference':
-        print ('not now')
+        if args.inference_file is None:
+            raise ValueError('Inference file not provided. Please pass a valid inference file for inference')
+        inference_emotic(args.inference_file, model_path, result_path, context_norm, body_norm, ind2cat, ind2vad, args)
     else:
-        print ('Unknown mode')
-    
+        raise ValueError('Unknown mode')    
