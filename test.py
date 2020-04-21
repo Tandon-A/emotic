@@ -2,6 +2,7 @@ import numpy as np
 import os 
 import scipy.io
 from sklearn.metrics import average_precision_score
+from sklearn.metrics import precision_recall_curve
 
 import torch 
 import torch.nn as nn 
@@ -21,17 +22,27 @@ def test_scikit_ap(cat_preds, cat_labels, ind2cat):
   return ap 
 
 ''' Calcaulate VAD (valence, arousal, dominance) errors. '''
-def test_vad(cont_preds, cont_labels):
+def test_vad(cont_preds, cont_labels, ind2vad):
   vad = np.zeros(3, dtype=np.float32)
-  vad_names = ['Valence, 'Arousal', 'Dominance']
   for i in range(3):
     vad[i] = np.mean(np.abs(cont_preds[i, :] - cont_labels[i, :]))
-    print ('Continuous %10s %.5f' %(vad_names[i], vad[i]))
-  print ('Mean VAD %.5f' %(vad.mean()))
+    print ('Continuous %10s %.5f' %(ind2vad[i], vad[i]))
+  print ('Mean VAD Error %.5f' %(vad.mean()))
   return vad
 
+''' Calculate thresholds where precision = recall. Used for inference. '''
+def get_thresholds(cat_preds, cat_labels):
+  thresholds = np.zeros(26, dtype=np.float32)
+  for i in range(26):
+    p, r, t = precision_recall_curve(cat_labels[i, :], cat_preds[i, :])
+    for k in range(len(p)):
+      if p[k] == r[k]:
+        thresholds[i] = t[k]
+        break
+  return thresholds
+
 ''' Test models on data '''
-def test_data(models, device, data_loader, ind2cat, num_images, result_dir='./', test_type='val'):
+def test_data(models, device, data_loader, ind2cat, ind2vad, num_images, result_dir='./', test_type='val'):
     model_context, model_body, emotic_model = models
     cat_preds = np.zeros((num_images, 26))
     cat_labels = np.zeros((num_images, 26))
@@ -75,10 +86,14 @@ def test_data(models, device, data_loader, ind2cat, num_images, result_dir='./',
     print ('saved mat files')
 
     test_scikit_ap(cat_preds, cat_labels, ind2cat)
-    test_vad(cont_preds, cont_labels)
+    test_vad(cont_preds, cont_labels, ind2vad)
+    thresholds = get_thresholds(cat_preds, cat_labels)
+    np.save(os.path.join(result_dir, '%s_thresholds.npy' %(test_type)), thresholds)
+    print ('saved thresholds')
+
 
 ''' Prepare test data and test models on the same'''
-def test_emotic(result_path, model_path, ind2cat, context_norm, body_norm, args):
+def test_emotic(result_path, model_path, ind2cat, ind2vad, context_norm, body_norm, args):
 
     # Prepare models 
     model_context = torch.load(os.path.join(model_path,'model_context1.pth'))
@@ -100,5 +115,4 @@ def test_emotic(result_path, model_path, ind2cat, context_norm, body_norm, args)
     print ('test loader ', len(test_loader))
     
     device = torch.device("cuda:%s" %(str(args.gpu)) if torch.cuda.is_available() else "cpu")
-    test_data([model_context, model_body, emotic_model], device, test_loader, ind2cat, test_dataset.__len__(), result_dir=result_path, test_type='test')
-
+    test_data([model_context, model_body, emotic_model], device, test_loader, ind2cat, ind2vad, test_dataset.__len__(), result_dir=result_path, test_type='test')
