@@ -78,6 +78,8 @@ if __name__ == '__main__':
     if args.mode == 'train':
         if args.data_path is None:
             raise ValueError('Data path not provided. Please pass a valid data path for training')
+        with open(os.path.join(args.experiment_path, 'config.txt'), 'w') as f:
+            print(args, file=f)
         train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, ind2vad, context_norm, body_norm, args)
     elif args.mode == 'test':
         if args.data_path is None:
@@ -86,6 +88,8 @@ if __name__ == '__main__':
     elif args.mode == 'train_test':
         if args.data_path is None:
             raise ValueError('Data path not provided. Please pass a valid data path for training and testing')
+        with open(os.path.join(args.experiment_path, 'config.txt'), 'w') as f:
+            print(args, file=f)
         train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, ind2vad, context_norm, body_norm, args)
         test_emotic(result_path, model_path, ind2cat, ind2vad, context_norm, body_norm, args)
     elif args.mode == 'inference':
