@@ -1,0 +1,2 @@
+/data/emotic19/emotic/mscoco/images/COCO_val2014_000000562243.jpg 86 58 564 628
+/data/emotic19/emotic/mscoco/images/COCO_train2014_000000288841.jpg 485 149 605 473
