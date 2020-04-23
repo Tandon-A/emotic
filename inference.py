@@ -31,39 +31,37 @@ def process_images(context_norm, body_norm, image_context_path=None, image_conte
   return image_context, image_body  
 
 ''' Do inference over an image. '''
-def infer(model_path, result_path, context_norm, body_norm, ind2cat, ind2vad, device, image_context_path=None, image_context=None, image_body=None, bbox=None):
+def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context_path=None, image_context=None, image_body=None, bbox=None):
   image_context, image_body = process_images(context_norm, body_norm, image_context_path=image_context_path, image_context=image_context, image_body=image_body, bbox=bbox)
-  image_context = image_context.to(device)
-  image_body = image_body.to(device)
-  print ('prepared images')
 
-  thresholds = torch.FloatTensor(np.load(os.path.join(result_path, 'val_thresholds.npy'))).to(device)
-  print ('loaded val thresholds ')
+  model_context, model_body, emotic_model = models
+
+  with torch.no_grad():
+    image_context = image_context.to(device)
+    image_body = image_body.to(device)
+    model_context.eval()
+    model_body.eval()
+    emotic_model.eval()
+    
+    pred_context = model_context(image_context)
+    pred_body = model_body(image_body)
+    pred_cat, pred_cont = emotic_model(pred_context, pred_body)
+    pred_cat = pred_cat.squeeze(0)
+    pred_cont = pred_cont.squeeze(0).to("cpu").data.numpy()
+
+    bool_cat_pred = torch.gt(pred_cat, thresholds)
   
-  model_context = torch.load(os.path.join(model_path,'model_context1.pth'))
-  model_body = torch.load(os.path.join(model_path,'model_body1.pth'))
-  emotic_model = torch.load(os.path.join(model_path,'model_emotic1.pth'))
-  model_context = model_context.to(device)
-  model_body = model_body.to(device)
-  emotic_model = emotic_model.to(device)
-  print ('Successfully loaded models')
-
-  pred_context = model_context(image_context)
-  pred_body = model_body(image_body)
-  pred_cat, pred_cont = emotic_model(pred_context, pred_body)
-  pred_cat = pred_cat.squeeze(0)
-  pred_cont = pred_cont.squeeze(0).to("cpu").data.numpy()
-
+  print ('\n Image predictions')
   print ('Continuous Dimnesions Predictions') 
   for i in range(len(pred_cont)):
     print ('Continuous %10s %.5f' %(ind2vad[i], 10*pred_cont[i]))
-  
-  bool_cat_pred = torch.gt(pred_cat, thresholds)
+  print ('Categorical Emotion Predictions')
   cat_emotions = list()
   for i in range(len(bool_cat_pred)):
     if bool_cat_pred[i] == True:
       print ('Categorical %16s' %(ind2cat[i]))
       cat_emotions.append(ind2cat[i])
+  
   return cat_emotions, 10*pred_cont
 
 
@@ -73,6 +71,12 @@ def inference_emotic(images_list, model_path, result_path, context_norm, body_no
     lines = f.readlines()
   
   device = torch.device("cuda:%s" %(str(args.gpu)) if torch.cuda.is_available() else "cpu")
+  thresholds = torch.FloatTensor(np.load(os.path.join(result_path, 'val_thresholds.npy'))).to(device) 
+  model_context = torch.load(os.path.join(model_path,'model_context1.pth')).to(device)
+  model_body = torch.load(os.path.join(model_path,'model_body1.pth')).to(device)
+  emotic_model = torch.load(os.path.join(model_path,'model_emotic1.pth')).to(device)
+  models = [model_context, model_body, emotic_model]
+
 
   result_file = os.path.join(result_path, 'inference_list.txt')
   with open(result_file, 'w') as f:
@@ -81,7 +85,7 @@ def inference_emotic(images_list, model_path, result_path, context_norm, body_no
   for idx, line in enumerate(lines):
     image_context_path, x1, y1, x2, y2 = line.split('\n')[0].split(' ')
     bbox = [int(x1), int(y1), int(x2), int(y2)]
-    pred_cat, pred_cont = infer(model_path, result_path, context_norm, body_norm, ind2cat, ind2vad, device, image_context_path=image_context_path, bbox=bbox)
+    pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context_path=image_context_path, bbox=bbox)
     
     write_line = list()
     write_line.append(image_context_path)
@@ -93,4 +97,3 @@ def inference_emotic(images_list, model_path, result_path, context_norm, body_no
     with open(result_file, 'a') as f:
       f.writelines(write_line)
       f.writelines('\n')
-  
