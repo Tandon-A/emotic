@@ -8,7 +8,6 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-
 def to_cpu(tensor):
     return tensor.detach().cpu()
 
@@ -68,7 +67,6 @@ def rescale_boxes(boxes, current_dim, original_shape):
     boxes[:, 3] = ((boxes[:, 3] - pad_y // 2) / unpad_h) * orig_h
     return boxes
 
-''' Edit code to do only for people and reject others'''
 def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
     """
     Removes detections with lower object confidence score than 'conf_thres' and performs
@@ -109,48 +107,6 @@ def non_max_suppression(prediction, conf_thres=0.5, nms_thres=0.4):
 
     return output
 
-def nms_people(prediction, conf_thres=0.5, nms_thres=0.4):
-    """
-    Removes detections with lower object confidence score than 'conf_thres' and performs
-    Non-Maximum Suppression to further filter detections.
-    Returns detections with shape:
-        (x1, y1, x2, y2, object_conf, class_score, class_pred)
-    """
-
-    # From (center x, center y, width, height) to (x1, y1, x2, y2)
-    prediction[..., :4] = xywh2xyxy(prediction[..., :4])
-    output = [None for _ in range(len(prediction))]
-    for image_i, image_pred in enumerate(prediction):
-        # Filter out confidence scores below threshold
-        image_pred = image_pred[image_pred[:, 4] >= conf_thres]
-        # If none are remaining => process next image
-        if not image_pred.size(0):
-            continue
-        # Object confidence times class confidence
-        score = image_pred[:, 4] * image_pred[:, 5:].max(1)[0]
-        # Sort by it
-        image_pred = image_pred[(-score).argsort()]
-        class_confs, class_preds = image_pred[:, 5:].max(1, keepdim=True)
-        detections = torch.cat((image_pred[:, :5], class_confs.float(), class_preds.float()), 1)
-        # Perform non-maximum suppression
-        keep_boxes = []
-        while detections.size(0):
-            large_overlap = bbox_iou(detections[0, :4].unsqueeze(0), detections[:, :4]) > nms_thres
-            label_match = detections[0, -1] == detections[:, -1]
-            # Indices of boxes with lower confidence scores, large IOUs and matching labels
-            invalid = large_overlap & label_match
-            weights = detections[invalid, 4:5]
-            # Merge overlapping bboxes by order of confidence
-            detections[0, :4] = (weights * detections[invalid, :4]).sum(0) / weights.sum()
-            keep_boxes += [detections[0]]
-            detections = detections[~invalid]
-        if keep_boxes:
-            output[image_i] = torch.stack(keep_boxes)
-
-    return output
-
-
-
 def parse_model_config(path):
     """Parses the yolo-v3 layer configuration file and returns module definitions"""
     file = open(path, 'r')
@@ -184,7 +140,7 @@ def parse_data_config(path):
             continue
         key, value = line.split('=')
         options[key.strip()] = value.strip()
-    return option
+    return options
 
 def create_modules(module_defs):
     """
@@ -514,16 +470,16 @@ class Darknet(nn.Module):
         fp.close()
 
 def prepare_yolo(model_dir):
-    cfg_file = os.path.join(model_dir, 'yolov3_tiny.cfg')
+    cfg_file = os.path.join(model_dir, 'yolov3.cfg')
     if not os.path.exists(cfg_file):
-        download_command = 'wget https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3-tiny.cfg -O ' + cfg_file
+        download_command = 'wget https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg -O ' + cfg_file
         os.system(download_command)
-    weight_file = os.path.join(model_dir, 'yolov3_tiny.weights')
+    weight_file = os.path.join(model_dir, 'yolov3.weights')
     if not os.path.exists(weight_file):
-        download_command = 'wget https://pjreddie.com/media/files/yolov3-tiny.weights -O ' + weight_file
+        download_command = 'wget https://pjreddie.com/media/files/yolov3.weights -O ' + weight_file
         os.system(download_command)
     
     yolo_model = Darknet(cfg_file, 416)
     yolo_model.load_darknet_weights(weight_file)
     print ('prepared yolo model')
-    return yolo_model 
+    return yolo_model
