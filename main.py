@@ -7,22 +7,22 @@ from inference import inference_emotic
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--gpu', type=int, default=0)
+    parser.add_argument('--gpu', type=int, default=0, help='gpu id')
     parser.add_argument('--mode', type=str, default='train_test', choices=['train', 'test', 'train_test', 'inference'])
-    parser.add_argument('--data_path', type=str, help='Path to preprocessed data npy files')
+    parser.add_argument('--data_path', type=str, help='Path to preprocessed data npy files/ csv files')
     parser.add_argument('--experiment_path', type=str, required=True, help='Path to save experiment files (results, models, logs)')
     parser.add_argument('--model_dir', type=str, default='models', help='Path to save models')
     parser.add_argument('--result_dir', type=str, default='results', help='Path to save results (prediction, labels mat file)')
     parser.add_argument('--log_dir', type=str, default='logs', help='Path to save logs (train, val)')
     parser.add_argument('--inference_file', type=str, help='Text file containing image context paths and bounding box')
-    parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
-    parser.add_argument('--body_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'])
+    parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'], help='context model type')
+    parser.add_argument('--body_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'], help='body model type')
     parser.add_argument('--learning_rate', type=float, default=0.01)
     parser.add_argument('--weight_decay', type=float, default=5e-4)
-    parser.add_argument('--cat_loss_weight', type=float, default=0.5)
-    parser.add_argument('--cont_loss_weight', type=float, default=0.5)
-    parser.add_argument('--continuous_loss_type', type=str, default='Smooth L1', choices=['L2', 'Smooth L1'])
-    parser.add_argument('--discrete_loss_weight_type', type=str, default='dynamic', choices=['dynamic', 'mean', 'static'])
+    parser.add_argument('--cat_loss_weight', type=float, default=0.5, help='weight for discrete loss')
+    parser.add_argument('--cont_loss_weight', type=float, default=0.5, help='weight fot continuous loss')
+    parser.add_argument('--continuous_loss_type', type=str, default='Smooth L1', choices=['L2', 'Smooth L1'], help='type of continuous loss')
+    parser.add_argument('--discrete_loss_weight_type', type=str, default='dynamic', choices=['dynamic', 'mean', 'static'], help='weight policy for discrete loss')
     parser.add_argument('--epochs', type=int, default=15)
     parser.add_argument('--batch_size', type=int, default=52) # use batch size = double(categorical emotion classes)
     # Generate args
@@ -62,7 +62,7 @@ if __name__ == '__main__':
     for idx, emotion in enumerate(cat):
         cat2ind[emotion] = idx
         ind2cat[idx] = emotion
-
+    
     vad = ['Valence', 'Arousal', 'Dominance']
     ind2vad = {}
     for idx, continuous in enumerate(vad):
@@ -97,4 +97,4 @@ if __name__ == '__main__':
             raise ValueError('Inference file not provided. Please pass a valid inference file for inference')
         inference_emotic(args.inference_file, model_path, result_path, context_norm, body_norm, ind2cat, ind2vad, args)
     else:
-        raise ValueError('Unknown mode')    
+        raise ValueError('Unknown mode')
