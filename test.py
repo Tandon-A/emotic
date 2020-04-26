@@ -115,4 +115,4 @@ def test_emotic(result_path, model_path, ind2cat, ind2vad, context_norm, body_no
     print ('test loader ', len(test_loader))
     
     device = torch.device("cuda:%s" %(str(args.gpu)) if torch.cuda.is_available() else "cpu")
-    test_data([model_context, model_body, emotic_model], device, test_loader, ind2cat, ind2vad, test_dataset.__len__(), result_dir=result_path, test_type='test')
+    test_data([model_context, model_body, emotic_model], device, test_loader, ind2cat, ind2vad, len(test_dataset), result_dir=result_path, test_type='test')
