@@ -31,7 +31,7 @@ def process_images(context_norm, body_norm, image_context_path=None, image_conte
   return image_context, image_body  
 
 ''' Do inference over an image. '''
-def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context_path=None, image_context=None, image_body=None, bbox=None):
+def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context_path=None, image_context=None, image_body=None, bbox=None, to_print=True):
   image_context, image_body = process_images(context_norm, body_norm, image_context_path=image_context_path, image_context=image_context, image_body=image_body, bbox=bbox)
 
   model_context, model_body, emotic_model = models
@@ -39,9 +39,6 @@ def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models,
   with torch.no_grad():
     image_context = image_context.to(device)
     image_body = image_body.to(device)
-    model_context.eval()
-    model_body.eval()
-    emotic_model.eval()
     
     pred_context = model_context(image_context)
     pred_body = model_body(image_body)
@@ -51,16 +48,19 @@ def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models,
 
     bool_cat_pred = torch.gt(pred_cat, thresholds)
   
-  print ('\n Image predictions')
-  print ('Continuous Dimnesions Predictions') 
-  for i in range(len(pred_cont)):
-    print ('Continuous %10s %.5f' %(ind2vad[i], 10*pred_cont[i]))
-  print ('Categorical Emotion Predictions')
   cat_emotions = list()
   for i in range(len(bool_cat_pred)):
     if bool_cat_pred[i] == True:
-      print ('Categorical %16s' %(ind2cat[i]))
       cat_emotions.append(ind2cat[i])
+
+  if to_print == True:
+    print ('\n Image predictions')
+    print ('Continuous Dimnesions Predictions') 
+    for i in range(len(pred_cont)):
+      print ('Continuous %10s %.5f' %(ind2vad[i], 10*pred_cont[i]))
+    print ('Categorical Emotion Predictions')
+    for emotion in cat_emotions:
+      print ('Categorical %16s' %(emotion))
   
   return cat_emotions, 10*pred_cont
 
@@ -75,6 +75,9 @@ def inference_emotic(images_list, model_path, result_path, context_norm, body_no
   model_context = torch.load(os.path.join(model_path,'model_context1.pth')).to(device)
   model_body = torch.load(os.path.join(model_path,'model_body1.pth')).to(device)
   emotic_model = torch.load(os.path.join(model_path,'model_emotic1.pth')).to(device)
+  model_context.eval()
+  model_body.eval()
+  emotic_model.eval()
   models = [model_context, model_body, emotic_model]
 
 
