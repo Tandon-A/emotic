@@ -11,20 +11,30 @@ A scene context, as shown in the figure above, can provide additional informatio
 
 ## Pipeline 
 
-The project uses the [EMOTIC dataset](https://drive.google.com/file/d/0B7sjGeF4f3FYQUVlZ3ZOai1ieEU/view) and follows the methodology as introduced in the paper *'Context based emotion recognition using EMOTIC dataset'*. ([paper](https://ieeexplore.ieee.org/document/8713881))
+The project uses the [EMOTIC dataset](https://drive.google.com/file/d/0B7sjGeF4f3FYQUVlZ3ZOai1ieEU/view) and follows the methodology as introduced in the paper *'Context based emotion recognition using EMOTIC dataset'*. ([paper](https://arxiv.org/pdf/2003.13401.pdf))
 
 ![Pipeline](https://raw.githubusercontent.com/Tandon-A/emotic/master/assets/pipeline%20model.jpg "Model Pipeline") 
-###### Fig 2: Model Pipeline ([Image source](https://ieeexplore.ieee.org/document/8713881))
+###### Fig 2: Model Pipeline ([Image source](https://arxiv.org/pdf/2003.13401.pdf))
 
 Two feature extraction modules first extract features over an image. These features are then used by a third module to predict the continuous dimensions (valence, arousal and dominance) and the discrete emotion categories. 
 
-
-
-
 ## Acknowledgements
 
-* [Emotions Recognition in Context](https://github.com/rkosti/emotic)
 * [Places365-CNN](https://github.com/CSAILVision/places365) 
+* [Pytorch-Yolo](https://github.com/eriklindernoren/PyTorch-YOLOv3)
+
+### Context Based Emotion Recognition using Emotic Dataset 
+_Ronak Kosti, Jose Alvarez, Adria Recasens, Agata Lapedriza_ <br>
+[[Paper]](https://arxiv.org/pdf/2003.13401.pdf) [[Project Webpage]](http://sunai.uoc.edu/emotic/) [[Authors' Implementation]](https://github.com/rkosti/emotic)
+
+```
+@article{kosti2020context,
+  title={Context based emotion recognition using emotic dataset},
+  author={Kosti, Ronak and Alvarez, Jose M and Recasens, Adria and Lapedriza, Agata},
+  journal={arXiv preprint arXiv:2003.13401},
+  year={2020}
+}
+```
 
 ## Author 
 [Abhishek Tandon](https://github.com/Tandon-A)
