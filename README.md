@@ -40,7 +40,23 @@ Download the [Emotic dataset](https://drive.google.com/open?id=0B7sjGeF4f3FYQUVl
 * data_dir: Path of the directory containing the emotic and annotations folder as described in the above data directory structure. 
 * generate_npy: Argument to specify to generate npy files (later used for training and testing) along with CSV files. If not passed only CSV files are generated. 
 
+2. To train the model: 
 
+```
+> python main.py --mode train --data_path proj/data/emotic_pre --experiment_path proj/debug_exp
+```
+* mode: Mode to run the main file.
+* data_path: Path of the directory which contains the preprocessed data and CSV files generated in the first step.  
+* experiment_path: Path of the experiment directory. The directory will save the results, models and logs. 
+
+3. To test the model: 
+
+```
+> python main.py --mode test --data_path proj/data/emotic_pre --experiment_path proj/debug_exp
+```
+* mode: Mode to run the main file.
+* data_path: Path of the directory which contains the preprocessed data and CSV files generated in the first step.  
+* experiment_path: Path of the experiment directory. The directory will save the results, models and logs. 
 
 
 
