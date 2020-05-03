@@ -11,12 +11,38 @@ A scene context, as shown in the figure above, can provide additional informatio
 
 ## Pipeline 
 
-The project uses the [EMOTIC dataset](https://drive.google.com/file/d/0B7sjGeF4f3FYQUVlZ3ZOai1ieEU/view) and follows the methodology as introduced in the paper *'Context based emotion recognition using EMOTIC dataset'*. ([paper](https://arxiv.org/pdf/2003.13401.pdf))
+The project uses the EMOTIC dataset and follows the methodology as introduced in the paper [*'Context based emotion recognition using EMOTIC dataset'*](https://arxiv.org/pdf/2003.13401.pdf)*.
 
 ![Pipeline](https://raw.githubusercontent.com/Tandon-A/emotic/master/assets/pipeline%20model.jpg "Model Pipeline") 
 ###### Fig 2: Model Pipeline ([Image source](https://arxiv.org/pdf/2003.13401.pdf))
 
-Two feature extraction modules first extract features over an image. These features are then used by a third module to predict the continuous dimensions (valence, arousal and dominance) and the discrete emotion categories. 
+Two feature extraction modules first extract features over an image. These features are then used by a third module to predict the continuous dimensions (valence, arousal and dominance) and the discrete emotion categories.
+
+## Usage 
+
+Download the [Emotic dataset](https://drive.google.com/open?id=0B7sjGeF4f3FYQUVlZ3ZOai1ieEU) and [annotations](https://1drv.ms/u/s!AkYHbdGNmIVCgbYJxp1EtUplH6BhSw?e=VUP26u) and prepare the directory following the below structure: 
+```
+├── ...
+│   ├── emotic
+│   |    ├── ade20k
+│   |    ├── emodb_small
+│   |    ├── framesdb
+│   |    ├── mscoco 
+│   ├── Annotations
+│   |    ├── Annotations.mat
+```
+
+1. To convert annotations from mat object to csv files and preprocess the data: 
+
+```
+> python mat2py.py --data_dir proj/data/emotic19 --generate_npy
+```
+* data_dir: Path of the directory containing the emotic and annotations folder as described in the above data directory structure. 
+* generate_npy: Argument to specify to generate npy files (later used for training and testing) along with CSV files. If not passed only CSV files are generated. 
+
+
+
+
 
 ## Acknowledgements
 
