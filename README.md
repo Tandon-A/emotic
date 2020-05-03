@@ -56,9 +56,16 @@ Download the [Emotic dataset](https://drive.google.com/open?id=0B7sjGeF4f3FYQUVl
 ```
 * mode: Mode to run the main file.
 * data_path: Path of the directory which contains the preprocessed data and CSV files generated in the first step.  
-* experiment_path: Path of the experiment directory. The directory will save the results, models and logs. 
+* experiment_path: Path of the experiment directory. Models stored in the the directory are used for testing. 
 
+4. To perform inference: 
 
+```
+> python main.py --mode inference --inference_file proj/debug_exp/inference_file.txt --experiment_path proj/debug_exp
+```
+* mode: Mode to run the main file.
+* inference_file: Text file specifying images to perform inference. A row is: full path of image x1 y1 x2 y2, where (x1,y1) and (x2,y2) specify the bounding box. Refer sample_inference_list.txt.
+* experiment_path: Path of the experiment directory. Models stored in the the directory are used for inference. 
 
 ## Acknowledgements
 
