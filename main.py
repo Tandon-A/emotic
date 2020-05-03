@@ -11,9 +11,9 @@ def parse_args():
     parser.add_argument('--mode', type=str, default='train_test', choices=['train', 'test', 'train_test', 'inference'])
     parser.add_argument('--data_path', type=str, help='Path to preprocessed data npy files/ csv files')
     parser.add_argument('--experiment_path', type=str, required=True, help='Path to save experiment files (results, models, logs)')
-    parser.add_argument('--model_dir', type=str, default='models', help='Path to save models')
-    parser.add_argument('--result_dir', type=str, default='results', help='Path to save results (prediction, labels mat file)')
-    parser.add_argument('--log_dir', type=str, default='logs', help='Path to save logs (train, val)')
+    parser.add_argument('--model_dir_name', type=str, default='models', help='Name of the directory to save models')
+    parser.add_argument('--result_dir_name', type=str, default='results', help='Name of the directory to save results(predictions, labels mat files)')
+    parser.add_argument('--log_dir_name', type=str, default='logs', help='Name of the directory to save logs (train, val)')
     parser.add_argument('--inference_file', type=str, help='Text file containing image context paths and bounding box')
     parser.add_argument('--context_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'], help='context model type')
     parser.add_argument('--body_model', type=str, default='resnet18', choices=['resnet18', 'resnet50'], help='body model type')
@@ -31,10 +31,10 @@ def parse_args():
 
 ''' Check (create if they don't exist) experiment directories '''
 def check_paths(args):    
-    folders= [args.result_dir, args.model_dir]
+    folders= [args.result_dir_name, args.model_dir_name]
     paths = list()
     for folder in folders:
-        folder_path = os.path.join(args.experiment_path, folder)
+        folder_path = os.path.join(args.experiment_path, args.log_dir_name, folder)
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         paths.append(folder_path)
