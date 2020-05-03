@@ -203,7 +203,8 @@ def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', genera
         else: 
           cat_arr.append(cat_to_one_hot(et.comb_cat))
           cont_arr.append(np.array(et.comb_cont))
-      print (idx, et.cat, et.cont)
+      if idx % 1000 == 0:
+        print (" Preprocessing data. Index = ", idx)
       idx = idx + 1
     ## for debugging purposes 
     # if idx >= 104:
@@ -243,9 +244,9 @@ def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', genera
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument('--data_dir', type=str, required=True, help='Path to Emotic data and annotations')
-    parser.add_argument('--label',type=str,  default='all',
-                        choices=['train', 'val', 'test', 'all'])
-    parser.add_argument('--generate_npy', action='store_true')
+    parser.add_argument('--save_dir_name', type=str, default='emotic_pre', help='Directory name in which preprocessed data will be stored')
+    parser.add_argument('--label', type=str,  default='all', choices=['train', 'val', 'test', 'all'])
+    parser.add_argument('--generate_npy', action='store_true', help='Generate npy files')
     # Generate args
     args = parser.parse_args()
     return args
@@ -254,7 +255,7 @@ if __name__ == '__main__':
     args = parse_args()
     ann_path_src = os.path.join(args.data_dir, 'Annotations','Annotations.mat')
     data_path_src = os.path.join(args.data_dir, 'emotic')
-    save_path = os.path.join(args.data_dir, 'emotic_pre')
+    save_path = os.path.join(args.data_dir, args.save_dir_name)
     if not os.path.exists(save_path):
       os.makedirs(save_path)
     print ('loading Annotations')
