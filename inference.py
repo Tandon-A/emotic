@@ -1,12 +1,21 @@
+import cv2
 import numpy as np 
 import os 
-import cv2
 
 import torch 
 from torchvision import transforms
 
-''' Prepare conext and body image '''
+
 def process_images(context_norm, body_norm, image_context_path=None, image_context=None, image_body=None, bbox=None):
+  ''' Prepare context and body image. 
+  :param context_norm: List containing mean and std values for context images. 
+  :param body_norm: List containing mean and std values for body images. 
+  :param image_context_path: Path of the context image. 
+  :param image_context: Numpy array of the context image.
+  :param image_body: Numpy array of the body image. 
+  :param bbox: List to specify the bounding box to generate the body image. bbox = [x1, y1, x2, y2].
+  :return: Transformed image_context tensor and image_body tensor.
+  '''
   if image_context is None and image_context_path is None:
     raise ValueError('both image_context and image_context_path cannot be none. Please specify one of the two.')
   if image_body is None and bbox is None: 
@@ -30,8 +39,21 @@ def process_images(context_norm, body_norm, image_context_path=None, image_conte
 
   return image_context, image_body  
 
-''' Do inference over an image. '''
+
 def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context_path=None, image_context=None, image_body=None, bbox=None, to_print=True):
+  ''' Perform inference over an image. 
+  :param context_norm: List containing mean and std values for context images. 
+  :param body_norm: List containing mean and std values for body images. 
+  :param ind2cat: Dictionary converting integer index to categorical emotion. 
+  :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance).
+  :param device: Torch device. Used to send tensors to GPU if available.
+  :param image_context_path: Path of the context image. 
+  :param image_context: Numpy array of the context image.
+  :param image_body: Numpy array of the body image. 
+  :param bbox: List to specify the bounding box to generate the body image. bbox = [x1, y1, x2, y2].
+  :param to_print: Variable to display inference results.
+  :return: Categorical Emotions list and continuous emotion dimensions numpy array.
+  '''
   image_context, image_body = process_images(context_norm, body_norm, image_context_path=image_context_path, image_context=image_context, image_body=image_body, bbox=bbox)
 
   model_context, model_body, emotic_model = models
@@ -65,8 +87,17 @@ def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models,
   return cat_emotions, 10*pred_cont
 
 
-''' Infer on list of images defined in a text file. '''
 def inference_emotic(images_list, model_path, result_path, context_norm, body_norm, ind2cat, ind2vad, args):
+  ''' Infer on list of images defined in a text file. Save the results in inference_file.txt in the directory specified by the result_path. 
+  :param images_list: Text file specifying the images and their bounding box values to conduct inference. A row in the file is Path_of_image x1 y1 x2 y2. 
+  :param model_path: Directory path to load pretrained base models and save the models after training.
+  :param result_path: Directory path to save the results (val_predidictions mat object, val_thresholds npy object).
+  :param context_norm: List containing mean and std values for context images. 
+  :param body_norm: List containing mean and std values for body images. 
+  :param ind2cat: Dictionary converting integer index to categorical emotion. 
+  :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance).
+  :param args: Runtime arguments.
+  '''
   with open(images_list, 'r') as f:
     lines = f.readlines()
   
