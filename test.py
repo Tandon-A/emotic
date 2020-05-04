@@ -12,8 +12,14 @@ from torchvision import transforms
 
 from emotic_dataset import Emotic_PreDataset
 
-''' Calculate average precision per category using sklearn library. '''
+
 def test_scikit_ap(cat_preds, cat_labels, ind2cat):
+  ''' Calculate average precision per emotion category using sklearn library.
+  :param cat_preds: Categorical emotion predictions. 
+  :param cat_labels: Categorical emotion labels. 
+  :param ind2cat: Dictionary converting integer index to categorical emotion.
+  :return: Numpy array containing average precision per emotion category.
+  '''
   ap = np.zeros(26, dtype=np.float32)
   for i in range(26):
     ap[i] = average_precision_score(cat_labels[i, :], cat_preds[i, :])
@@ -21,8 +27,14 @@ def test_scikit_ap(cat_preds, cat_labels, ind2cat):
   print ('Mean AP %.5f' %(ap.mean()))
   return ap 
 
-''' Calcaulate VAD (valence, arousal, dominance) errors. '''
+
 def test_vad(cont_preds, cont_labels, ind2vad):
+  ''' Calcaulate VAD (valence, arousal, dominance) errors. 
+  :param cont_preds: Continuous emotion predictions. 
+  :param cont_labels: Continuous emotion labels. 
+  :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance).
+  :return: Numpy array containing mean absolute error per continuous emotion dimension. 
+  '''
   vad = np.zeros(3, dtype=np.float32)
   for i in range(3):
     vad[i] = np.mean(np.abs(cont_preds[i, :] - cont_labels[i, :]))
@@ -30,8 +42,13 @@ def test_vad(cont_preds, cont_labels, ind2vad):
   print ('Mean VAD Error %.5f' %(vad.mean()))
   return vad
 
-''' Calculate thresholds where precision = recall. Used for inference. '''
+
 def get_thresholds(cat_preds, cat_labels):
+  ''' Calculate thresholds where precision is equal to recall. These thresholds are then later for inference.
+  :param cat_preds: Categorical emotion predictions. 
+  :param cat_labels: Categorical emotion labels. 
+  :return: Numpy array containing thresholds per emotion category where precision is equal to recall.
+  '''
   thresholds = np.zeros(26, dtype=np.float32)
   for i in range(26):
     p, r, t = precision_recall_curve(cat_labels[i, :], cat_preds[i, :])
@@ -41,8 +58,18 @@ def get_thresholds(cat_preds, cat_labels):
         break
   return thresholds
 
-''' Test models on data '''
+
 def test_data(models, device, data_loader, ind2cat, ind2vad, num_images, result_dir='./', test_type='val'):
+    ''' Test models on data 
+    :param models: List containing model_context, model_body and emotic_model (fusion model) in that order.
+    :param device: Torch device. Used to send tensors to GPU if available. 
+    :param data_loader: Dataloader iterating over dataset. 
+    :param ind2cat: Dictionary converting integer index to categorical emotion.
+    :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance)
+    :param num_images: Number of images in the dataset. 
+    :param result_dir: Directory path to save results (predictions mat object and thresholds npy object).
+    :param test_type: Test type variable. Variable used in the name of thresholds and predictio files.
+    '''
     model_context, model_body, emotic_model = models
     cat_preds = np.zeros((num_images, 26))
     cat_labels = np.zeros((num_images, 26))
@@ -92,9 +119,16 @@ def test_data(models, device, data_loader, ind2cat, ind2vad, num_images, result_
     print ('saved thresholds')
 
 
-''' Prepare test data and test models on the same'''
 def test_emotic(result_path, model_path, ind2cat, ind2vad, context_norm, body_norm, args):
-
+    ''' Prepare test data and test models on the same.
+    :param result_path: Directory path to save the results (val_predidictions mat object, val_thresholds npy object).
+    :param model_path: Directory path to load pretrained base models and save the models after training. 
+    :param ind2cat: Dictionary converting integer index to categorical emotion. 
+    :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance).
+    :param context_norm: List containing mean and std values for context images. 
+    :param body_norm: List containing mean and std values for body images. 
+    :param args: Runtime arguments.
+    '''    
     # Prepare models 
     model_context = torch.load(os.path.join(model_path,'model_context1.pth'))
     model_body = torch.load(os.path.join(model_path,'model_body1.pth'))
