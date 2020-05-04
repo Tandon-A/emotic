@@ -1,10 +1,9 @@
-import numpy as np
-from scipy.io import loadmat
+import argparse 
+import csv 
 import cv2
-import os
-import matplotlib.pyplot as plt
-import csv
-import argparse
+import numpy as np 
+import os 
+from scipy.io import loadmat 
 
 
 class emotic_train:
@@ -151,12 +150,25 @@ for idx, emotion in enumerate(cat):
   ind2cat[idx] = emotion
 
 def cat_to_one_hot(y_cat):
+    '''
+    One hot encode a categorical label. 
+    :param y_cat: Categorical Label
+    :return: One hot encoded categorical label 
+    '''
     one_hot_cat = np.zeros(26)
     for em in y_cat:
         one_hot_cat[cat2ind[em]] = 1
     return one_hot_cat
 
 def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', generate_npy=False):
+  '''
+  Prepare csv files and save preprocessed data in npy files. 
+  :param data_mat: Mat data object for a label. 
+  :param data_path_src: Path of the parent directory containing the emotic images folders (mscoco, framesdb, emodb_small, ade20k)
+  :param save_dir: Path of the directory to save the csv files and the npy files (if generate_npy files is True)
+  :param dataset_type: Type of the dataset (train, val or test). Variable used in the name of csv files and npy files. 
+  :param generate_npy: If True the data is preprocessed and saved in npy files. Npy files are later used for training. 
+  '''
   data_set = list()
 
   if generate_npy:
