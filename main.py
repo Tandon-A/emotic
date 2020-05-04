@@ -1,5 +1,5 @@
-import os 
 import argparse
+import os
 
 from train import train_emotic
 from test import test_emotic
@@ -29,19 +29,23 @@ def parse_args():
     args = parser.parse_args()
     return args
 
-''' Check (create if they don't exist) experiment directories '''
+
 def check_paths(args):    
+    ''' Check (create if they don't exist) experiment directories
+    :param args: runtime arguments as passed by the user
+    :returns list containing result_dir_path, model_dir_path, train_log_dir_path, val_log_dir_path
+    '''
     folders= [args.result_dir_name, args.model_dir_name]
     paths = list()
     for folder in folders:
-        folder_path = os.path.join(args.experiment_path, args.log_dir_name, folder)
+        folder_path = os.path.join(args.experiment_path, folder)
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         paths.append(folder_path)
         
     log_folders = ['train', 'val']
     for folder in log_folders:
-        folder_path = os.path.join(args.experiment_path, args.log_dir, folder)
+        folder_path = os.path.join(args.experiment_path, args.log_dir_name, folder)
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
         paths.append(folder_path)
