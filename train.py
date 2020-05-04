@@ -1,15 +1,14 @@
 import numpy as np 
 import os 
 
-import torch 
+import torch
 import torch.nn as nn 
 import torch.nn.functional as F
 import torch.optim as optim 
+from torch.optim.lr_scheduler import StepLR
 from torch.utils.data import DataLoader 
 import torchvision.models as models
-from torch.autograd import Variable
 from torchvision import transforms
-from torch.optim.lr_scheduler import StepLR
 from tensorboardX import SummaryWriter
 
 from emotic import Emotic 
@@ -18,9 +17,24 @@ from loss_classes import DiscreteLoss, ContinuousLoss_SL1, ContinuousLoss_L2
 from prepare_models import prep_models
 from test import test_data
 
-''' Train models on data '''
-def train_data(opt, scheduler, models, device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args):
 
+def train_data(opt, scheduler, models, device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args):
+    '''
+    Training emotic model on train data using train loader.
+    :param opt: Optimizer object.
+    :param scheduler: Learning rate scheduler object.
+    :param models: List containing model_context, model_body and emotic_model (fusion model) in that order. 
+    :param device: Torch device. Used to send tensors to GPU if available. 
+    :param train_loader: Dataloader iterating over train dataset. 
+    :param val_loader: Dataloader iterating over validation dataset. 
+    :param disc_loss: Discrete loss criterion. Loss measure between discrete emotion categories predictions and the target emotion categories. 
+    :param cont_loss: Continuous loss criterion. Loss measure between continuous VAD emotion predictions and the target VAD values.
+    :param train_writer: SummaryWriter object to save train logs. 
+    :param val_writer: SummaryWriter object to save validation logs. 
+    :param model_path: Directory path to save the models after training. 
+    :param args: Runtime arguments.
+    '''
+    
     model_context, model_body, emotic_model = models
 
     emotic_model.to(device)
@@ -118,9 +132,18 @@ def train_data(opt, scheduler, models, device, train_loader, val_loader, disc_lo
     print ('saved models')
 
 
-''' Prepare dataset, dataloders, models '''
 def train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat, ind2vad, context_norm, body_norm, args):
-
+    ''' Prepare dataset, dataloders, models. 
+    :param result_path: Directory path to save the results (val_predidictions mat object, val_thresholds npy object).
+    :param model_path: Directory path to load pretrained base models and save the models after training. 
+    :param train_log_path: Directory path to save the training logs. 
+    :param val_log_path: Directoty path to save the validation logs. 
+    :param ind2cat: Dictionary converting integer index to categorical emotion. 
+    :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance).
+    :param context_norm: List containing mean and std values for context images. 
+    :param body_norm: List containing mean and std values for body images. 
+    :param args: Runtime arguments. 
+    '''
     # Load preprocessed data from npy files
     train_context = np.load(os.path.join(args.data_path, 'train_context_arr.npy'))
     train_body = np.load(os.path.join(args.data_path, 'train_body_arr.npy'))
@@ -172,5 +195,7 @@ def train_emotic(result_path, model_path, train_log_path, val_log_path, ind2cat,
     train_writer = SummaryWriter(train_log_path)
     val_writer = SummaryWriter(val_log_path)
 
+    # training
     train_data(opt, scheduler, [model_context, model_body, emotic_model], device, train_loader, val_loader, disc_loss, cont_loss, train_writer, val_writer, model_path, args)
+    # validation
     test_data([model_context, model_body, emotic_model], device, val_loader, ind2cat, ind2vad, len(val_dataset), result_dir=result_path, test_type='val')
