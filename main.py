@@ -31,9 +31,9 @@ def parse_args():
 
 
 def check_paths(args):    
-    ''' Check (create if they don't exist) experiment directories
-    :param args: runtime arguments as passed by the user
-    :returns list containing result_dir_path, model_dir_path, train_log_dir_path, val_log_dir_path
+    ''' Check (create if they don't exist) experiment directories.
+    :param args: Runtime arguments as passed by the user.
+    :return: List containing result_dir_path, model_dir_path, train_log_dir_path, val_log_dir_path.
     '''
     folders= [args.result_dir_name, args.model_dir_name]
     paths = list()
