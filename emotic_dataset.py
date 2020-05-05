@@ -1,14 +1,15 @@
+import ast
+import numpy as np 
+import os 
+from PIL import Image
+
 import torch 
 from torch.utils.data import Dataset
 from torchvision import transforms
 
-from PIL import Image
-import os 
-import ast
-import numpy as np 
 
-'''Emotic Dataset class - uses preprocessed data stored in the npy files'''
 class Emotic_PreDataset(Dataset):
+  ''' Custom Emotic dataset class. Use preprocessed data stored in npy files. '''
   def __init__(self, x_context, x_body, y_cat, y_cont, transform, context_norm, body_norm):
     super(Emotic_PreDataset,self).__init__()
     self.x_context = x_context
@@ -29,9 +30,9 @@ class Emotic_PreDataset(Dataset):
     cont_label = self.y_cont[index]
     return self.context_norm(self.transform(image_context)), self.body_norm(self.transform(image_body)), torch.tensor(cat_label, dtype=torch.float32), torch.tensor(cont_label, dtype=torch.float32)/10.0
 
-  
-'''Emotic Dataset class - uses data stored in the disk''' 
+
 class Emotic_CSVDataset(Dataset):
+  ''' Custom Emotic dataset class. Use csv files and generated data at runtime. '''
   def __init__(self, data_df, cat2ind, transform, context_norm, body_norm, data_src = './'):
     super(Emotic_CSVDataset,self).__init__()
     self.data_df = data_df
