@@ -1,8 +1,8 @@
 import torch
 import torch.nn as nn
 
-''' Loss for categorical labels (Emotion classes) '''
 class DiscreteLoss(nn.Module):
+  ''' Class to measure loss between categorical emotion predictions and labels.'''
   def __init__(self, weight_type='mean', device=torch.device('cpu')):
     super(DiscreteLoss, self).__init__()
     self.weight_type = weight_type
@@ -31,8 +31,8 @@ class DiscreteLoss(nn.Module):
     return weights
 
 
-''' L2 loss for continuous labels (Valence, Arousal, Dominance) '''
 class ContinuousLoss_L2(nn.Module):
+  ''' Class to measure loss between continuous emotion dimension predictions and labels. Using l2 loss as base. '''
   def __init__(self, margin=1):
     super(ContinuousLoss_L2, self).__init__()
     self.margin = margin
@@ -42,10 +42,10 @@ class ContinuousLoss_L2(nn.Module):
     loss = labs ** 2 
     loss[ (labs < self.margin) ] = 0.0
     return loss.sum()
- 
 
-''' Smooth L1 loss for continuous labels (Valence, Arousal, Dominance) '''
+
 class ContinuousLoss_SL1(nn.Module):
+  ''' Class to measure loss between continuous emotion dimension predictions and labels. Using smooth l1 loss as base. '''
   def __init__(self, margin=1):
     super(ContinuousLoss_SL1, self).__init__()
     self.margin = margin
@@ -58,6 +58,7 @@ class ContinuousLoss_SL1(nn.Module):
 
 
 if __name__ == '__main__':
+
   # Discrete Loss function test 
   target = torch.zeros((2,26))
   target[0, 0:13] = 1
@@ -72,7 +73,7 @@ if __name__ == '__main__':
 
   disc_loss = DiscreteLoss('dynamic', torch.device("cuda:0"))
   loss = disc_loss(pred, target)
-  print (' discrete loss class', loss, loss.shape, loss.dtype, loss.requires_grad)  # loss = 37.1217
+  print ('discrete loss class', loss, loss.shape, loss.dtype, loss.requires_grad)  # loss = 37.1217
 
   #Continuous Loss function test
   target = torch.ones((2,3))
@@ -88,9 +89,8 @@ if __name__ == '__main__':
 
   cont_loss_SL1 = ContinuousLoss_SL1()
   loss = cont_loss_SL1(pred*10, target * 10)
-  print (' continuous SL1 loss class', loss, loss.shape, loss.dtype, loss.requires_grad) # loss = 4.8750
+  print ('continuous SL1 loss class', loss, loss.shape, loss.dtype, loss.requires_grad) # loss = 4.8750
 
   cont_loss_L2 = ContinuousLoss_L2()
   loss = cont_loss_L2(pred*10, target * 10)
-  print (' continuous L2 loss class', loss, loss.shape, loss.dtype, loss.requires_grad) # loss = 12.0
-  
+  print ('continuous L2 loss class', loss, loss.shape, loss.dtype, loss.requires_grad) # loss = 12.0
