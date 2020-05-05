@@ -1,8 +1,8 @@
 import torch 
 import torch.nn as nn 
 
-''' Emotic Model'''
 class Emotic(nn.Module):
+  ''' Emotic Model'''
   def __init__(self, num_context_features, num_body_features):
     super(Emotic,self).__init__()
     self.num_context_features = num_context_features
@@ -25,4 +25,4 @@ class Emotic(nn.Module):
     fuse_out = self.d1(fuse_out)    
     cat_out = self.fc_cat(fuse_out)
     cont_out = self.fc_cont(fuse_out)
-    return cat_out, cont_out 
+    return cat_out, cont_out
