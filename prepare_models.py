@@ -1,11 +1,17 @@
+import os
 import torch
 from torch.autograd import Variable as V
 import torchvision.models as models
 from torch.nn import functional as F
-import os
 
-''' Function to prepare context and body model.''' 
+
 def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./'):
+  ''' Download imagenet pretrained models for context_model and body_model.
+  :param context_model: Model to use for conetxt features.
+  :param body_model: Model to use for body features.
+  :param model_dir: Directory path where to store pretrained models.
+  :return: Yolo model after loading model weights
+  '''
   model_name = '%s_places365.pth.tar' % context_model
   model_file = os.path.join(model_dir, model_name)
   if not os.path.exists(model_file):
@@ -47,7 +53,8 @@ def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./')
   print ('completed preparing body model')
   return model_context, model_body
 
+
 if __name__ == '__main__':
-  prep_models(model_dir='./')
+  prep_models(model_dir='proj/debug_exp/models')
 
 
