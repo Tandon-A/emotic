@@ -1,7 +1,7 @@
+import argparse 
+import cv2
 import numpy as np 
 import os 
-import cv2
-import argparse 
 
 import torch 
 from torchvision import transforms
@@ -23,6 +23,14 @@ def parse_args():
 
 
 def get_bbox(yolo_model, device, image_context, yolo_image_size=416, conf_thresh=0.8, nms_thresh=0.4):
+  ''' Use yolo to obtain bounding box of every person in context image. 
+  :param yolo_model: Yolo model to obtain bounding box of every person in context image. 
+  :param device: Torch device. Used to send tensors to GPU (if available) for faster processing. 
+  :yolo_image_size: Input image size for yolo model. 
+  :conf_thresh: Confidence threshold for yolo model. Predictions with object confidence > conf_thresh are returned. 
+  :nms_thresh: Non-maximal suppression threshold for yolo model. Predictions with IoU > nms_thresh are returned. 
+  :return: Numpy array of bounding boxes. Array shape = (no_of_persons, 4). 
+  '''
   test_transform = transforms.Compose([transforms.ToPILImage(),transforms.ToTensor()])
   image_yolo = test_transform(cv2.resize(image_context, (416, 416))).unsqueeze(0).to(device)
 
@@ -33,7 +41,7 @@ def get_bbox(yolo_model, device, image_context, yolo_image_size=416, conf_thresh
   
   bboxes = []
   for x1, y1, x2, y2, _, _, cls_pred in det:
-    if cls_pred == 0:
+    if cls_pred == 0:  # checking if predicted_class = persons. 
       x1 = int(min(image_context.shape[1], max(0, x1)))
       x2 = int(min(image_context.shape[1], max(x1, x2)))
       y1 = int(min(image_context.shape[0], max(15, y1)))
@@ -41,7 +49,18 @@ def get_bbox(yolo_model, device, image_context, yolo_image_size=416, conf_thresh
       bboxes.append([x1, y1, x2, y2])
   return np.array(bboxes)
 
+
 def yolo_infer(images_list, result_path, model_path, context_norm, body_norm, ind2cat, ind2vad, args):
+  ''' Infer on a list of images defined in images_list text file to obtain bounding boxes of persons in the images using yolo model.
+  :param images_list: Text file specifying the images to conduct inference. A row in the file is Path_of_image. 
+  :param result_path: Directory path to save the results (images with the predicted emotion categories and continuous emotion dimesnions).
+  :param model_path: Directory path to load models and val_thresholds to perform inference.
+  :param context_norm: List containing mean and std values for context images. 
+  :param body_norm: List containing mean and std values for body images. 
+  :param ind2cat: Dictionary converting integer index to categorical emotion. 
+  :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance).
+  :param args: Runtime arguments.
+  '''
   device = torch.device("cuda:%s" %(str(args.gpu)) if torch.cuda.is_available() else "cpu")
   yolo = prepare_yolo(model_path)
   yolo = yolo.to(device)
@@ -57,9 +76,8 @@ def yolo_infer(images_list, result_path, model_path, context_norm, body_norm, in
     lines = f.readlines()
   
   for idx, line in enumerate(lines):
-    image_context_path, x1, y1, x2, y2 = line.split('\n')[0].split(' ')
+    image_context_path = line.split('\n')[0].split(' ')[0]
     image_context = cv2.cvtColor(cv2.imread(image_context_path), cv2.COLOR_BGR2RGB)
-    bbox = [int(x1), int(y1), int(x2), int(y2)]
     bbox_yolo = get_bbox(yolo, device, image_context)
     for pred_bbox in bbox_yolo:
       pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context=image_context, bbox=pred_bbox, to_print=False)
@@ -71,11 +89,22 @@ def yolo_infer(images_list, result_path, model_path, context_norm, body_norm, in
       cv2.putText(image_context, write_text_vad, (pred_bbox[0], pred_bbox[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
       for i, emotion in enumerate(pred_cat):
         cv2.putText(image_context, emotion, (pred_bbox[0], pred_bbox[1] + (i+1)*12), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
-    image_context = cv2.rectangle(image_context, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (0, 255, 0), 3) 
     cv2.imwrite(os.path.join(result_path, 'img_%r.jpg' %(idx)), cv2.cvtColor(image_context, cv2.COLOR_RGB2BGR))
     print ('completed inference for image %d'  %(idx))
 
+
 def yolo_video(video_file, result_path, model_path, context_norm, body_norm, ind2cat, ind2vad, args):
+  ''' Perform inference onn a video. First yolo model is used to obtain bounding boxes of persons in every frame.
+  After that the emotic model is used to obtain categoraical and continuous emotion predictions. 
+  :param video_file: Path of video file. 
+  :param result_path: Directory path to save the results (output video).
+  :param model_path: Directory path to load models and val_thresholds to perform inference.
+  :param context_norm: List containing mean and std values for context images. 
+  :param body_norm: List containing mean and std values for body images. 
+  :param ind2cat: Dictionary converting integer index to categorical emotion. 
+  :param ind2vad: Dictionary converting integer index to continuous emotion dimension (Valence, Arousal and Dominance).
+  :param args: Runtime arguments.
+  '''  
   device = torch.device("cuda:%s" %(str(args.gpu)) if torch.cuda.is_available() else "cpu")
   yolo = prepare_yolo(model_path)
   yolo = yolo.to(device)
@@ -93,7 +122,7 @@ def yolo_video(video_file, result_path, model_path, context_norm, body_norm, ind
   video_stream = cv2.VideoCapture(video_file)
   writer = None
 
-  print ('Starting testing')
+  print ('Starting testing on video')
   while True:
     (grabbed, frame) = video_stream.read()
     if not grabbed:
@@ -122,12 +151,18 @@ def yolo_video(video_file, result_path, model_path, context_norm, body_norm, ind
 
 
 def check_paths(args):
+  ''' Check (create if they don't exist) experiment directories.
+  :param args: Runtime arguments as passed by the user.
+  :return: result_dir_path, model_dir_path.
+  '''
   if args.inference_file is not None: 
     if not os.path.exists(args.inference_file):
       raise ValueError('inference file does not exist. Please pass a valid inference file')
   if args.video_file is not None: 
     if not os.path.exists(args.video_file):
       raise ValueError('video file does not exist. Please pass a valid video file')
+  if args.inference_file is None and args.video_file is None: 
+    raise ValueError(' both inference file and video file can\'t be none. Please specify one and run again')
   model_path = os.path.join(args.experiment_path, args.model_dir)
   if not os.path.exists(model_path):
     raise ValueError('model path %s does not exist. Please pass a valid model_path' %(model_path))
