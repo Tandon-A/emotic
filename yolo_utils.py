@@ -1,17 +1,20 @@
+import cv2
 import numpy as np 
 import os 
-import cv2
 
 import torch 
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.autograd import Variable
 
 
 def to_cpu(tensor):
     return tensor.detach().cpu()
 
 def xywh2xyxy(x):
+    ''' Convert bounding box from [x, y, w, h] to [x1, y1, x2, y2]
+    :param x: bounding boxes array
+    :return: Converted bounding box array 
+    '''
     y = x.new(x.shape)
     y[..., 0] = x[..., 0] - x[..., 2] / 2
     y[..., 1] = x[..., 1] - x[..., 3] / 2
@@ -470,6 +473,10 @@ class Darknet(nn.Module):
         fp.close()
 
 def prepare_yolo(model_dir):
+    ''' Download yolo model files and load the model weights
+    :param model_dir: Directory path where to store yolo model weights and yolo model configuration file.
+    :return: Yolo model after loading model weights
+    '''
     cfg_file = os.path.join(model_dir, 'yolov3.cfg')
     if not os.path.exists(cfg_file):
         download_command = 'wget https://raw.githubusercontent.com/pjreddie/darknet/master/cfg/yolov3.cfg -O ' + cfg_file
