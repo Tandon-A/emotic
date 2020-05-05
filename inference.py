@@ -90,8 +90,8 @@ def infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models,
 def inference_emotic(images_list, model_path, result_path, context_norm, body_norm, ind2cat, ind2vad, args):
   ''' Infer on list of images defined in a text file. Save the results in inference_file.txt in the directory specified by the result_path. 
   :param images_list: Text file specifying the images and their bounding box values to conduct inference. A row in the file is Path_of_image x1 y1 x2 y2. 
-  :param model_path: Directory path to load pretrained base models and save the models after training.
-  :param result_path: Directory path to save the results (val_predidictions mat object, val_thresholds npy object).
+  :param model_path: Directory path to load models and val_thresholds to perform inference.
+  :param result_path: Directory path to save the results (text file containig categorical emotion and continuous emotion dimension prediction per image).
   :param context_norm: List containing mean and std values for context images. 
   :param body_norm: List containing mean and std values for body images. 
   :param ind2cat: Dictionary converting integer index to categorical emotion. 
