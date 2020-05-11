@@ -79,16 +79,20 @@ def yolo_infer(images_list, result_path, model_path, context_norm, body_norm, in
     image_context_path = line.split('\n')[0].split(' ')[0]
     image_context = cv2.cvtColor(cv2.imread(image_context_path), cv2.COLOR_BGR2RGB)
     bbox_yolo = get_bbox(yolo, device, image_context)
-    for pred_bbox in bbox_yolo:
-      pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context=image_context, bbox=pred_bbox, to_print=False)
-      write_text_vad = list()
-      for continuous in pred_cont:
-        write_text_vad.append(str('%.1f' %(continuous)))
-      write_text_vad = 'vad ' + ' '.join(write_text_vad) 
-      image_context = cv2.rectangle(image_context, (pred_bbox[0], pred_bbox[1]),(pred_bbox[2] , pred_bbox[3]), (255, 0, 0), 3)
-      cv2.putText(image_context, write_text_vad, (pred_bbox[0], pred_bbox[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
-      for i, emotion in enumerate(pred_cat):
-        cv2.putText(image_context, emotion, (pred_bbox[0], pred_bbox[1] + (i+1)*12), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+    try:
+      for pred_bbox in bbox_yolo:
+        pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context=image_context, bbox=pred_bbox, to_print=False)
+        write_text_vad = list()
+        for continuous in pred_cont:
+          write_text_vad.append(str('%.1f' %(continuous)))
+        write_text_vad = 'vad ' + ' '.join(write_text_vad) 
+        image_context = cv2.rectangle(image_context, (pred_bbox[0], pred_bbox[1]),(pred_bbox[2] , pred_bbox[3]), (255, 0, 0), 3)
+        cv2.putText(image_context, write_text_vad, (pred_bbox[0], pred_bbox[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+        for i, emotion in enumerate(pred_cat):
+          cv2.putText(image_context, emotion, (pred_bbox[0], pred_bbox[1] + (i+1)*12), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
+    except Exception as e:
+      print ('Exception for image ',image_context_path)
+      print (e)
     cv2.imwrite(os.path.join(result_path, 'img_%r.jpg' %(idx)), cv2.cvtColor(image_context, cv2.COLOR_RGB2BGR))
     print ('completed inference for image %d'  %(idx))
 
@@ -130,17 +134,19 @@ def yolo_video(video_file, result_path, model_path, context_norm, body_norm, ind
     image_context = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
     bbox_yolo = get_bbox(yolo, device, image_context)
-    for pred_bbox in bbox_yolo:
-      pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context=image_context, bbox=pred_bbox, to_print=False)
-      write_text_vad = list()
-      for continuous in pred_cont:
-        write_text_vad.append(str('%.1f' %(continuous)))
-      write_text_vad = 'vad ' + ' '.join(write_text_vad) 
-      image_context = cv2.rectangle(image_context, (pred_bbox[0], pred_bbox[1]),(pred_bbox[2] , pred_bbox[3]), (255, 0, 0), 3)
-      cv2.putText(image_context, write_text_vad, (pred_bbox[0], pred_bbox[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
-      # for i, emotion in enumerate(pred_cat):
-      #   cv2.putText(image_context, emotion, (pred_bbox[0], pred_bbox[1] + (i+1)*12), cv2.FONT_HERSHEY_PLAIN, 1, (255, 255, 255), 1)
-    
+    try: 
+      for pred_idx, pred_bbox in enumerate(bbox_yolo):
+        pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context=image_context, bbox=pred_bbox, to_print=False)
+        write_text_vad = list()
+        for continuous in pred_cont:
+          write_text_vad.append(str('%.1f' %(continuous)))
+        write_text_vad = 'vad ' + ' '.join(write_text_vad) 
+        image_context = cv2.rectangle(image_context, (pred_bbox[0], pred_bbox[1]),(pred_bbox[2] , pred_bbox[3]), (255, 0, 0), 3)
+        cv2.putText(image_context, write_text_vad, (pred_bbox[0], pred_bbox[1] - 5), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)
+        for i, emotion in enumerate(pred_cat):
+          cv2.putText(image_context, emotion, (pred_bbox[0], pred_bbox[1] + (i+1)*12), cv2.FONT_HERSHEY_PLAIN, 1, (0, 0, 255), 2)
+    except Exception:
+      pass
     if writer is None:
       fourcc = cv2.VideoWriter_fourcc(*"MJPG")
       writer = cv2.VideoWriter(os.path.join(result_path, 'result_vid.avi'), fourcc, 30, (image_context.shape[1], image_context.shape[0]), True)  
