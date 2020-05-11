@@ -78,8 +78,8 @@ def yolo_infer(images_list, result_path, model_path, context_norm, body_norm, in
   for idx, line in enumerate(lines):
     image_context_path = line.split('\n')[0].split(' ')[0]
     image_context = cv2.cvtColor(cv2.imread(image_context_path), cv2.COLOR_BGR2RGB)
-    bbox_yolo = get_bbox(yolo, device, image_context)
     try:
+      bbox_yolo = get_bbox(yolo, device, image_context)
       for pred_bbox in bbox_yolo:
         pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context=image_context, bbox=pred_bbox, to_print=False)
         write_text_vad = list()
@@ -133,8 +133,8 @@ def yolo_video(video_file, result_path, model_path, context_norm, body_norm, ind
       break
     image_context = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
-    bbox_yolo = get_bbox(yolo, device, image_context)
     try: 
+      bbox_yolo = get_bbox(yolo, device, image_context)
       for pred_idx, pred_bbox in enumerate(bbox_yolo):
         pred_cat, pred_cont = infer(context_norm, body_norm, ind2cat, ind2vad, device, thresholds, models, image_context=image_context, bbox=pred_bbox, to_print=False)
         write_text_vad = list()
