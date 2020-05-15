@@ -69,8 +69,7 @@ Download the [Emotic dataset](https://drive.google.com/open?id=0B7sjGeF4f3FYQUVl
 
 ## Results 
 
-![Result GIF 1](https://github.com/Tandon-A/emotic/blob/master/assets/eld11_gif.gif "Result GIF 1")
-![Result GIF 2](https://github.com/Tandon-A/emotic/blob/master/assets/eld12_gif.gif "Result GIF 2")
+![Result GIF 1](https://github.com/Tandon-A/emotic/blob/master/assets/eld11_gif2.gif "Result GIF 1")
 
 ## Acknowledgements
 
