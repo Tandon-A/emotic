@@ -1,8 +1,7 @@
 import numpy as np 
 import os 
 import scipy.io
-from sklearn.metrics import average_precision_score
-from sklearn.metrics import precision_recall_curve
+from sklearn.metrics import average_precision_score, precision_recall_curve
 
 import torch 
 import torch.nn as nn 
