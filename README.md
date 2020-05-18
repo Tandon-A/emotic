@@ -11,7 +11,7 @@ A scene context, as shown in the figure above, can provide additional informatio
 
 ## Pipeline 
 
-The project uses the EMOTIC dataset and follows the methodology as introduced in the paper [*'Context based emotion recognition using EMOTIC dataset'*](https://arxiv.org/pdf/2003.13401.pdf)*.
+The project uses the EMOTIC dataset and follows the methodology as introduced in the paper *['Context based emotion recognition using EMOTIC dataset'](https://arxiv.org/pdf/2003.13401.pdf)*.
 
 ![Pipeline](https://raw.githubusercontent.com/Tandon-A/emotic/master/assets/pipeline%20model.jpg "Model Pipeline") 
 ###### Fig 2: Model Pipeline ([Image source](https://arxiv.org/pdf/2003.13401.pdf))
