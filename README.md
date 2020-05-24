@@ -65,7 +65,10 @@ Download the [Emotic dataset](https://drive.google.com/open?id=0B7sjGeF4f3FYQUVl
 ```
 * mode: Mode to run the main file.
 * inference_file: Text file specifying images to perform inference. A row is: 'full_path_of_image x1 y1 x2 y2', where (x1,y1) and (x2,y2) specify the bounding box. Refer sample_inference_list.txt.
-* experiment_path: Path of the experiment directory. Models stored in the the directory are used for inference. 
+* experiment_path: Path of the experiment directory. Models stored in the the directory are used for inference.     
+  
+  
+You can also train and test models on Emotic dataset by using the [Colab_train_emotic notebook](https://github.com/Tandon-A/emotic/blob/master/Colab_train_emotic.ipynb). 
 
 ## Results 
 
