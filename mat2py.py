@@ -138,17 +138,6 @@ class emotic_test:
                 break
 
 
-
-cat = ['Affection', 'Anger', 'Annoyance', 'Anticipation', 'Aversion', 'Confidence', 'Disapproval', 'Disconnection',
-       'Disquietment', 'Doubt/Confusion', 'Embarrassment', 'Engagement', 'Esteem', 'Excitement', 'Fatigue', 'Fear',
-       'Happiness', 'Pain', 'Peace', 'Pleasure', 'Sadness', 'Sensitivity', 'Suffering', 'Surprise', 'Sympathy', 'Yearning']
-
-cat2ind = {}
-ind2cat = {}
-for idx, emotion in enumerate(cat):
-  cat2ind[emotion] = idx
-  ind2cat[idx] = emotion
-
 def cat_to_one_hot(y_cat):
     '''
     One hot encode a categorical label. 
@@ -270,6 +259,16 @@ if __name__ == '__main__':
     save_path = os.path.join(args.data_dir, args.save_dir_name)
     if not os.path.exists(save_path):
       os.makedirs(save_path)
+    
+    cat = ['Affection', 'Anger', 'Annoyance', 'Anticipation', 'Aversion', 'Confidence', 'Disapproval', 'Disconnection',
+       'Disquietment', 'Doubt/Confusion', 'Embarrassment', 'Engagement', 'Esteem', 'Excitement', 'Fatigue', 'Fear',
+       'Happiness', 'Pain', 'Peace', 'Pleasure', 'Sadness', 'Sensitivity', 'Suffering', 'Surprise', 'Sympathy', 'Yearning']
+    cat2ind = {}
+    ind2cat = {}
+    for idx, emotion in enumerate(cat):
+        cat2ind[emotion] = idx
+        ind2cat[idx] = emotion
+        
     print ('loading Annotations')
     mat = loadmat(ann_path_src)
     if args.label.lower() == 'all':
