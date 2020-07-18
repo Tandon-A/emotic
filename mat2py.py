@@ -141,15 +141,15 @@ class emotic_test:
 def cat_to_one_hot(y_cat):
     '''
     One hot encode a categorical label. 
-    :param y_cat: Categorical Label
-    :return: One hot encoded categorical label 
+    :param y_cat: Categorical label.
+    :return: One hot encoded categorical label. 
     '''
     one_hot_cat = np.zeros(26)
     for em in y_cat:
         one_hot_cat[cat2ind[em]] = 1
     return one_hot_cat
 
-def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', generate_npy=False):
+def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', generate_npy=False, debug_mode=False):
   '''
   Prepare csv files and save preprocessed data in npy files. 
   :param data_mat: Mat data object for a label. 
@@ -190,6 +190,8 @@ def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', genera
           body_cv = cv2.resize(body, (128,128))
       except Exception as e:
         to_break += 1
+        if debug_mode == True:
+            print ('breaking at idx=%d, %d due to exception=%r' %(ex_idx, idx, e))
         continue
       if (et.cat_annotators == 0 or et.cont_annotators == 0):
         cat_cont_zero += 1
@@ -204,14 +206,16 @@ def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', genera
         else: 
           cat_arr.append(cat_to_one_hot(et.comb_cat))
           cont_arr.append(np.array(et.comb_cont))
-      if idx % 1000 == 0:
+      if idx % 1000 == 0 and debug_mode==False:
+        print (" Preprocessing data. Index = ", idx)
+      elif idx % 20 == 0 and debug_mode==True:
         print (" Preprocessing data. Index = ", idx)
       idx = idx + 1
-    ## for debugging purposes 
-    # if idx >= 104:
-    #   print (' ######## ', idx, ex_idx, ' ######')
-    #   print (to_break, path_not_exist, cat_cont_zero)
-    #   break
+    # for debugging purposes
+    if debug_mode == True and idx >= 104:
+      print (' ######## Breaking data prep step', idx, ex_idx, ' ######')
+      print (to_break, path_not_exist, cat_cont_zero)
+      break
   print (to_break, path_not_exist, cat_cont_zero)
   
   csv_path = os.path.join(save_dir, "%s.csv" %(dataset_type))
@@ -248,6 +252,7 @@ def parse_args():
     parser.add_argument('--save_dir_name', type=str, default='emotic_pre', help='Directory name in which preprocessed data will be stored')
     parser.add_argument('--label', type=str,  default='all', choices=['train', 'val', 'test', 'all'])
     parser.add_argument('--generate_npy', action='store_true', help='Generate npy files')
+    parser.add_argument('--debug_mode', action='store_true', help='Debug mode. Will only save a small subset of the data')
     # Generate args
     args = parser.parse_args()
     return args
@@ -268,7 +273,7 @@ if __name__ == '__main__':
     for idx, emotion in enumerate(cat):
         cat2ind[emotion] = idx
         ind2cat[idx] = emotion
-        
+    
     print ('loading Annotations')
     mat = loadmat(ann_path_src)
     if args.label.lower() == 'all':
@@ -278,4 +283,4 @@ if __name__ == '__main__':
     for label in labels:
       data_mat = mat[label]
       print ('starting label ', label)
-      prepare_data(data_mat, data_path_src, save_path, dataset_type=label, generate_npy=args.generate_npy)
+      prepare_data(data_mat, data_path_src, save_path, dataset_type=label, generate_npy=args.generate_npy, debug_mode=args.debug_mode)
