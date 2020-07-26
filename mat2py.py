@@ -215,6 +215,8 @@ def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', genera
     if debug_mode == True and idx >= 104:
       print (' ######## Breaking data prep step', idx, ex_idx, ' ######')
       print (to_break, path_not_exist, cat_cont_zero)
+      cv2.imwrite(os.path.join(save_dir, 'context1.png'), context_arr[-1])
+      cv2.imwrite(os.path.join(save_dir, 'body1.png'), body_arr[-1])
       break
   print (to_break, path_not_exist, cat_cont_zero)
   
@@ -244,7 +246,6 @@ def prepare_data(data_mat, data_path_src, save_dir, dataset_type='train', genera
     print (context_arr.shape, body_arr.shape, cat_arr.shape, cont_arr.shape)
   print ('completed generating %s data files' %(dataset_type))
  
-
 
 def parse_args():
     parser = argparse.ArgumentParser()
