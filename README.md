@@ -70,7 +70,7 @@ Download the [Emotic dataset](https://drive.google.com/open?id=0B7sjGeF4f3FYQUVl
   
 You can also train and test models on Emotic dataset by using the [Colab_train_emotic notebook](https://github.com/Tandon-A/emotic/blob/master/Colab_train_emotic.ipynb). [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Tandon-A/emotic/blob/master/Colab_train_emotic.ipynb)
 
-The **trained models** to use for inference purposes are availble [here](https://drive.google.com/drive/folders/1e-JLA7V73CQD5pjTFCSWnKCmB0gCpV1D?usp=sharing). 
+The **trained models and thresholds** to use for inference purposes are availble [here](https://drive.google.com/drive/folders/1e-JLA7V73CQD5pjTFCSWnKCmB0gCpV1D?usp=sharing). 
 
 ## Results 
 

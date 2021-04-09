@@ -9,6 +9,7 @@ from torch.utils.data import DataLoader
 import torchvision.models as models
 from torchvision import transforms
 
+from emotic import Emotic 
 from emotic_dataset import Emotic_PreDataset
 
 
