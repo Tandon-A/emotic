@@ -6,6 +6,7 @@ import os
 import torch 
 from torchvision import transforms
 
+from emotic import Emotic 
 from inference import infer
 from yolo_utils import prepare_yolo, rescale_boxes, non_max_suppression
 
@@ -98,7 +99,7 @@ def yolo_infer(images_list, result_path, model_path, context_norm, body_norm, in
 
 
 def yolo_video(video_file, result_path, model_path, context_norm, body_norm, ind2cat, ind2vad, args):
-  ''' Perform inference onn a video. First yolo model is used to obtain bounding boxes of persons in every frame.
+  ''' Perform inference on a video. First yolo model is used to obtain bounding boxes of persons in every frame.
   After that the emotic model is used to obtain categoraical and continuous emotion predictions. 
   :param video_file: Path of video file. 
   :param result_path: Directory path to save the results (output video).
