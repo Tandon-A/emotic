@@ -1,6 +1,7 @@
 import argparse
 import os
 
+from emotic import Emotic
 from train import train_emotic
 from test import test_emotic
 from inference import inference_emotic

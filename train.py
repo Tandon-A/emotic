@@ -13,7 +13,7 @@ from tensorboardX import SummaryWriter
 
 from emotic import Emotic 
 from emotic_dataset import Emotic_PreDataset
-from loss_classes import DiscreteLoss, ContinuousLoss_SL1, ContinuousLoss_L2
+from loss import DiscreteLoss, ContinuousLoss_SL1, ContinuousLoss_L2
 from prepare_models import prep_models
 from test import test_data
 
