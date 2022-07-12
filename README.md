@@ -18,9 +18,15 @@ The project uses the EMOTIC dataset and follows the methodology as introduced in
 
 Two feature extraction modules first extract features over an image. These features are then used by a third module to predict the continuous dimensions (valence, arousal and dominance) and the discrete emotion categories.
 
-## Usage 
+## Emotic Dataset 
 
-Download the [Emotic dataset](https://drive.google.com/open?id=0B7sjGeF4f3FYQUVlZ3ZOai1ieEU) and [annotations](https://1drv.ms/u/s!AkYHbdGNmIVCgbYJxp1EtUplH6BhSw?e=VUP26u) and prepare the directory following the below structure: 
+The Emotic dataset can be used only for **non-commercial research and education purposes**.
+Please, fill out the following form to request access to the dataset and the corresponding annotations.
+
+[Access Request for EMOTIC](https://forms.gle/wvhComeDHwQPD6TE6)
+
+## Usage
+Download the Emotic dataset & annotations, and prepare the directory following the below structure: 
 ```
 ├── ...
 │   ├── emotic
