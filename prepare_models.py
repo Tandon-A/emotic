@@ -21,9 +21,7 @@ def prep_models(context_model='resnet18', body_model='resnet18', model_dir='./')
   save_file = os.path.join(model_dir,'%s_places365_py36.pth.tar' % context_model)
   from functools import partial
   import pickle
-  pickle.load = partial(pickle.load, encoding="latin1")
-  pickle.Unpickler = partial(pickle.Unpickler, encoding="latin1")
-  model = torch.load(model_file, map_location=lambda storage, loc: storage, pickle_module=pickle)
+  model = torch.load(model_file, map_location=lambda storage, loc: storage, pickle_module=pickle, encoding="latin1")
   torch.save(model, save_file)
 
   # create the network architecture
